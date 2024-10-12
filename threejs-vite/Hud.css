@@ -1,0 +1,70 @@
+body {
+    overflow: hidden;
+    margin: 0;
+    }
+  
+    .Pause {
+          display: block;
+          position: fixed;
+          right: 100px;
+          top: 100px;
+          background: none;
+          border: none;
+          border-radius: 1em;
+          text-align: center;
+          font-family: sans-serif;
+          font-size: 150%;
+          padding: 20px;
+    }
+  
+    .Pause:hover {
+          cursor: pointer;
+          border: solid 1px gray;
+          background: rgba( 255, 255, 255, 0.5 );
+
+    }
+    .Hurricane {
+        display: block;
+        position: fixed;
+        right: 100px;
+        top: 200px;
+        background: none;
+        border: none;
+        border-radius: 1em;
+        text-align: center;
+        font-family: sans-serif;
+        font-size: 150%;
+        padding: 20px;
+  }
+
+  .Hurricane:hover {
+        cursor: pointer;
+        border: solid 1px gray;
+        background: rgba( 255, 255, 255, 0.5 );
+    }
+
+    .Earthquake {
+            display: block;
+            position: fixed;
+            right: 100px;
+            top: 300px;
+            background: none;
+            border: none;
+            border-radius: 1em;
+            text-align: center;
+            font-family: sans-serif;
+            font-size: 150%;
+            padding: 20px;
+      }
+    
+    .Earthquake:hover {
+        cursor: pointer;
+        border: solid 1px gray;
+        background: rgba( 255, 255, 255, 0.5 );
+
+  }
+
+
+
+
+    

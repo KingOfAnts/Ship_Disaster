@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-// Create scene
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xdddddd);
 
@@ -32,11 +31,19 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 // Create a group to hold the Earth and ship
 const earthGroup = new THREE.Group();
+const quakeGroup = new THREE.Group();
 scene.add(earthGroup);
-
+scene.add(quakeGroup);
 let ship = null;
 let earth = null;
 let earthRadius = 0;
+
+
+// Store the positions of the ports
+let santosPosition, glasgowPosition;
+let direction = 1; // 1 for moving to Glasgow, -1 for moving to Santos
+const speed = 0.005; // Speed of the ship
+let journeyProgress = 0; // Progress along the journey
 
 // Raycaster setup
 const raycaster = new THREE.Raycaster();
@@ -55,6 +62,71 @@ coordsDiv.style.padding = '5px';
 coordsDiv.style.borderRadius = '5px';
 document.body.appendChild(coordsDiv);
 
+
+const Menu = document.createElement('Menu');
+Menu.style.position = 'absolute';
+Menu.style.top = '10px';
+Menu.style.right = '100px';
+Menu.style.color = 'white';
+Menu.style.fontSize = '14px';
+Menu.style.fontFamily = 'Arial, sans-serif';
+Menu.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+Menu.style.padding = '5px';
+Menu.style.borderRadius = '5px';
+document.body.appendChild(Menu);
+Menu.textContent = `This is Menu :`;
+Menu.style.display = 'block';
+//-------------------------------------------------------Buttons---------------------------------//
+
+const PauseBtn = document.getElementById("PAW");
+PauseBtn.addEventListener("click", togglePause, false);
+var PawsOn = 0;
+// Toggle Pause
+function togglePause() {
+  if (PawsOn ==0 ){
+    Menu.textContent = `This is Menu :Pause Clicked!`;
+    PauseBtn.textContent = "PAUSE";
+
+  }else{
+    Menu.textContent = `This is Menu :`;
+    PauseBtn.textContent = "Pause";
+  }
+	PawsOn = 1 - PawsOn;	// toggles between 0 and 1
+}
+//
+const HurricaneBtn = document.getElementById("HUR");
+HurricaneBtn.addEventListener("click", HurricaneOn, false);
+var HurOn = 0;
+// Toggle Pause
+function HurricaneOn() {
+  if (HurOn ==0 ){
+    Menu.textContent = `This is Menu :Hurricane Clicked!`;
+    HurricaneBtn.textContent = "HURRICANE";
+
+  }else{
+    Menu.textContent = `This is Menu :`;
+    HurricaneBtn.textContent = "Hurricane";
+  }
+	HurOn = 1 - HurOn;	// toggles between 0 and 1
+ 
+}
+//
+const EarthquakeBtn = document.getElementById("EAR");
+EarthquakeBtn.addEventListener("click", EarthquakeOn, false);
+var EarOn = 0;
+// Toggle Pause
+function EarthquakeOn() {
+  if (EarOn ==0 ){
+    Menu.textContent = `This is Menu :Earthquake Clicked!`;
+    EarthquakeBtn.textContent = "EARTHQUAKE";
+
+  }else{
+    Menu.textContent = `This is Menu :`;
+    EarthquakeBtn.textContent = "Earthquake";
+  }
+	EarOn = 1 - EarOn;	// toggles between 0 and 1
+}
+//--------------------------------------------------------------------------------------------------//
 // Load Earth model
 const earthLoader = new GLTFLoader();
 earthLoader.load(
@@ -78,18 +150,17 @@ earthLoader.load(
     
     controls.update();
 
-    // Load ship model after Earth is loaded
     const shipLoader = new GLTFLoader();
     shipLoader.load(
-      './models/ship.glb',
+      './models/plane.glb',
       (gltf) => {
         console.log('Ship model loaded successfully');
         ship = gltf.scene;
         ship.scale.set(0.3, 0.3, 0.3); // Adjust scale as needed
         earthGroup.add(ship);
 
-        // Position ship above Earth's surface
-        ship.position.set(earthRadius * 1.0, 0, 0);
+        // Position ship at the Santos port
+        ship.position.copy(santosPosition);
       },
       (xhr) => {
         console.log((xhr.loaded / xhr.total) * 100 + '% ship loaded');
@@ -98,6 +169,16 @@ earthLoader.load(
         console.error('An error happened while loading the ship model', error);
       }
     );
+
+    const santosLat = -7;
+    const santosLon = 7;
+    santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
+    createPort(santosPosition, 0x0000ff); 
+
+    const glasgowLat = 48;
+    const glasgowLon = 65; 
+    glasgowPosition = latLonToPosition(glasgowLat, glasgowLon, earthRadius);
+    createPort(glasgowPosition, 0xff0000); 
   },
   (xhr) => {
     console.log((xhr.loaded / xhr.total) * 100 + '% Earth loaded');
@@ -107,32 +188,10 @@ earthLoader.load(
   }
 );
 
-// Handle window resize
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// Function to create a temporary cube
-function createTemporaryCube(position) {
-  const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-  const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-  const cube = new THREE.Mesh(geometry, material);
-  cube.position.copy(position);
-  earthGroup.add(cube);
-
-  // Remove the cube after 3 seconds
-  setTimeout(() => {
-    earthGroup.remove(cube);
-  }, 3000);
-}
-
-window.addEventListener('click', onMouseClick, false);
-// Function to convert latitude and longitude to Cartesian coordinates
-function latLonToCartesian(lat, lon, radius, ) {
-  const phi = (90 - lat) * (Math.PI / 180);
-  const theta = (lon + 180) * (Math.PI / 180);
+// Function to convert latitude and longitude to 3D position
+function latLonToPosition(lat, lon, radius) {
+  const phi = (90 - lat) * (Math.PI / 180);  // Convert latitude to radians
+  const theta = (lon + 180) * (Math.PI / 180);  // Convert longitude to radians
 
   const x = -radius * Math.sin(phi) * Math.cos(theta);
   const y = radius * Math.cos(phi);
@@ -141,35 +200,100 @@ function latLonToCartesian(lat, lon, radius, ) {
   return new THREE.Vector3(x, y, z);
 }
 
-// Function to animate the ship's movement
-function moveShipTo(destination) {
-  if (!ship) return;
-
-  const start = ship.position.clone();
-  const end = destination.clone();
-
-  const duration = 2; // Duration of the animation in seconds
-  let startTime = null;
-
-  function animateShip(time) {
-    if (!startTime) startTime = time;
-    const elapsedTime = (time - startTime) / 1000;
-
-    // Interpolate position
-    const t = Math.min(elapsedTime / duration, 1);
-    ship.position.lerpVectors(start, end, t);
-
-    // Make the ship face the direction of movement
-    ship.lookAt(earthGroup.position);
-
-    // Continue the animation until the duration is complete
-    if (t < 4) {
-      requestAnimationFrame(animateShip);
-    }
-  }
-
-  requestAnimationFrame(animateShip);
+// Function to create port boxes
+function createPort(position, color = 0x0000ff) {
+  const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  const material = new THREE.MeshBasicMaterial({ color });
+  const box = new THREE.Mesh(geometry, material);
+  box.position.copy(position);
+  earthGroup.add(box);
 }
+// ------------------------------------------------------------------- natural disasters --------------------------------------
+// Load hurricane texture and earhtquake 
+const textureLoader = new THREE.TextureLoader();
+const hurricaneTexture = textureLoader.load('./models/hurricane.png');
+const earthquakeTexture = textureLoader.load('./models/Earthquake.png');
+
+// Handle window resize
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Function to create a temporary hurricane image
+function createTemporaryHurricane(position) {
+  if (HurOn== 1){
+    const hurricaneSize = 2;  // Increase this value to make the hurricane bigger (was 1 before)
+    const geometry = new THREE.PlaneGeometry(hurricaneSize, hurricaneSize);  // Larger plane
+    const material = new THREE.MeshBasicMaterial({ map: hurricaneTexture, transparent: true });
+    const hurricane = new THREE.Mesh(geometry, material);
+
+    // Adjust the hurricane's position to be slightly above the Earth's surface
+    const offset = 0.25;  // Controls how high above the surface the hurricane appears
+    const direction = position.clone().normalize();  // Get the direction from the center of the Earth
+    const raisedPosition = position.clone().addScaledVector(direction, offset);  // Add the offset
+
+    hurricane.position.copy(raisedPosition);
+
+    // Align the hurricane to face upwards relative to the Earth's surface
+    const axis = new THREE.Vector3(0, 1, 0);  // Axis that points upwards in local space
+    const up = new THREE.Vector3(0, 0, 1);  // Use Z-axis as the "up" vector for the plane
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);  // Align Z-axis with the normal
+    hurricane.quaternion.copy(quaternion);
+
+    earthGroup.add(hurricane);
+
+    // Remove the hurricane after 3 seconds
+    setTimeout(() => {
+      earthGroup.remove(hurricane);
+    }, 3000);
+  }
+}
+
+function createTemporaryEarthquake(position) {
+  if (EarOn == 1){
+    
+    const earthquakeSize = 2;  // Increase this value to make the hurricane bigger (was 1 before)
+    const geometry = new THREE.PlaneGeometry(earthquakeSize, earthquakeSize);  // Larger plane
+    const material = new THREE.MeshBasicMaterial({ map: earthquakeTexture, transparent: true });
+    const earthquake = new THREE.Mesh(geometry, material);
+
+    // Adjust the hurricane's position to be slightly above the Earth's surface
+    const offset = 0.25;  // Controls how high above the surface the hurricane appears
+    const direction = position.clone().normalize();  // Get the direction from the center of the Earth
+    const raisedPosition = position.clone().addScaledVector(direction, offset);  // Add the offset
+
+    earthquake.position.copy(raisedPosition);
+
+    // Align the hurricane to face upwards relative to the Earth's surface
+    const axis = new THREE.Vector3(0, 1, 0);  // Axis that points upwards in local space
+    const up = new THREE.Vector3(0, 0, 1);  // Use Z-axis as the "up" vector for the plane
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);  // Align Z-axis with the normal
+    earthquake.quaternion.copy(quaternion);
+
+    earthGroup.add(earthquake);
+    quakeGroup.add(earthquake);
+    // Remove the hurricane after 3 seconds
+    setTimeout(() => {
+      earthGroup.remove(earthquake);
+      quakeGroup.remove(earthquake);
+    }, 3000);
+  }
+}
+function shakeEarth() {
+  // Generate random values for the 
+    quakeGroup.children.forEach(object => {
+    // Generate random values for the shake
+    const xShake = Math.random() * 0.2 - 0.1;
+    const yShake = Math.random() * 0.2 - 0.1;
+    const zShake = Math.random() * 0.2 - 0.1;
+
+    // Apply the shake to the object's position
+    object.position.set(object.position.x + xShake, object.position.y + yShake, object.position.z + zShake);
+    });
+}
+// -----------------------------------------------------------------------------------------------------------------------
 
 // Handle mouse click
 function onMouseClick(event) {
@@ -198,35 +322,65 @@ function onMouseClick(event) {
     coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
     coordsDiv.style.display = 'block';
 
-    // Convert latitude and longitude back to a 3D point on the Earth's surface
-    const destination = latLonToCartesian(lat, lon, earthRadius * 1.05); // The `1.05` ensures it’s slightly above the surface.
-
-    // Move the ship to the destination
-    moveShipTo(destination);
+    // Create a temporary hurricane at the clicked location
+    createTemporaryHurricane(clickedPoint);
+    createTemporaryEarthquake(clickedPoint);
   } else {
     coordsDiv.style.display = 'none';
   }
 }
 
+window.addEventListener('click', onMouseClick, false);
 
-// Animation loop
+// Function to calculate the spherical interpolation
+function sphericalInterpolation(start, end, alpha) {
+  const startVector = start.clone().normalize();
+  const endVector = end.clone().normalize();
+
+  const dot = startVector.dot(endVector);
+  const theta = Math.acos(dot) * alpha; // Angle between the two points
+  const relativeVector = endVector.clone().sub(startVector.clone().multiplyScalar(dot)).normalize(); // Orthogonal vector
+
+  return startVector.clone().multiplyScalar(Math.cos(theta)).add(relativeVector.multiplyScalar(Math.sin(theta))).normalize().multiplyScalar(earthRadius);
+}
+
 function animate() {
-  requestAnimationFrame(animate);
+  
+    requestAnimationFrame(animate);
+    if (PawsOn == 0){
+     // Move the ship along the great-circle path
+      if (ship) {
+          
+        const start = santosPosition;
+        const end = glasgowPosition;
 
-  // // Move the ship around the Earth
-  // if (ship) {
-  //   const time = Date.now() * 0.001;
-  //   const radius = ship.position.length();
-  //   ship.position.x = Math.cos(time) * radius;
-  //   ship.position.z = Math.sin(time) * radius;
+        // Interpolate the position of the ship along the great circle
+        ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
+
+        // Make the ship face the direction of movement
+        const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed); // Calculate next position
+        ship.lookAt(earthGroup.position.clone().add(nextPosition)); // Look towards the next position
+
+        // Update journey progress
+        journeyProgress += speed; // Increase progress based on speed
+
+        // Check if the ship reached the target position
+        if (journeyProgress >= 1) {
+          // Switch direction and reset journey progress
+          direction *= -1;
+          journeyProgress = 0; // Reset progress for the new journey
+          // Swap start and end positions
+          [santosPosition, glasgowPosition] = [glasgowPosition, santosPosition];
+        }
+    }
     
-  //   // Make the ship face the direction of movement
-  //   ship.lookAt(earthGroup.position);
-  // }
-
-
-  controls.update();
-  renderer.render(scene, camera);
+    if (quakeGroup){
+      shakeEarth();
+    }
+  }
+    controls.update();
+    renderer.render(scene, camera);
+  
 }
 
 animate();
