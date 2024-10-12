@@ -267,26 +267,28 @@ function animate() {
 
   // Move the ship along the great-circle path
   if (ship) {
-    const start = santosPosition;
-    const end = glasgowPosition;
+      if (PawsOn == 1){
+      const start = santosPosition;
+      const end = glasgowPosition;
 
-    // Interpolate the position of the ship along the great circle
-    ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
+      // Interpolate the position of the ship along the great circle
+      ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
 
-    // Make the ship face the direction of movement
-    const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed); // Calculate next position
-    ship.lookAt(earthGroup.position.clone().add(nextPosition)); // Look towards the next position
+      // Make the ship face the direction of movement
+      const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed); // Calculate next position
+      ship.lookAt(earthGroup.position.clone().add(nextPosition)); // Look towards the next position
 
-    // Update journey progress
-    journeyProgress += speed; // Increase progress based on speed
+      // Update journey progress
+      journeyProgress += speed; // Increase progress based on speed
 
-    // Check if the ship reached the target position
-    if (journeyProgress >= 1) {
-      // Switch direction and reset journey progress
-      direction *= -1;
-      journeyProgress = 0; // Reset progress for the new journey
-      // Swap start and end positions
-      [santosPosition, glasgowPosition] = [glasgowPosition, santosPosition];
+      // Check if the ship reached the target position
+      if (journeyProgress >= 1) {
+        // Switch direction and reset journey progress
+        direction *= -1;
+        journeyProgress = 0; // Reset progress for the new journey
+        // Swap start and end positions
+        [santosPosition, glasgowPosition] = [glasgowPosition, santosPosition];
+      }
     }
   }
 
