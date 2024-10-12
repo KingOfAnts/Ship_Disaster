@@ -36,6 +36,7 @@ scene.add(earthGroup);
 scene.add(quakeGroup);
 let ship = null;
 let earth = null;
+
 let earthRadius = 0;
 
 
@@ -156,7 +157,7 @@ earthLoader.load(
       (gltf) => {
         console.log('Ship model loaded successfully');
         ship = gltf.scene;
-        ship.scale.set(0.3, 0.3, 0.3); // Adjust scale as needed
+        ship.scale.set(0.1, 0.1, 0.1); // Adjust scale as needed
         earthGroup.add(ship);
 
         // Position ship at the Santos port
@@ -200,13 +201,32 @@ function latLonToPosition(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 
-// Function to create port boxes
+// Function to create towers
 function createPort(position, color = 0x0000ff) {
-  const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-  const material = new THREE.MeshBasicMaterial({ color });
-  const box = new THREE.Mesh(geometry, material);
-  box.position.copy(position);
-  earthGroup.add(box);
+  let Tower = null;
+  const towerLoader = new GLTFLoader();
+  towerLoader.load(
+    './models/tower.glb',
+      (gltf) => {
+        console.log('Tower model loaded successfully');
+        Tower = gltf.scene;
+        Tower.scale.set(0.5, 0.5, 0.5); // Adjust scale as needed
+        earthGroup.add(Tower);
+
+        // Position ship at the Santos port
+        Tower.position.copy(position);
+      },
+      (xhr) => {
+        console.log((xhr.loaded / xhr.total) * 100 + '% Tower loaded');
+      },
+      (error) => {
+        console.error('An error happened while loading the Tower model', error);
+      });
+  //const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  //const material = new THREE.MeshBasicMaterial({ color });
+  //const box = new THREE.Mesh(geometry, material);
+  //box.position.copy(position);
+  //earthGroup.add(box);
 }
 // ------------------------------------------------------------------- natural disasters --------------------------------------
 // Load hurricane texture and earhtquake 
