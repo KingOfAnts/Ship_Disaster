@@ -55,6 +55,38 @@ coordsDiv.style.padding = '5px';
 coordsDiv.style.borderRadius = '5px';
 document.body.appendChild(coordsDiv);
 
+
+const Menu = document.createElement('Menu');
+Menu.style.position = 'absolute';
+Menu.style.top = '10px';
+Menu.style.right = '100px';
+Menu.style.color = 'white';
+Menu.style.fontSize = '14px';
+Menu.style.fontFamily = 'Arial, sans-serif';
+Menu.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+Menu.style.padding = '5px';
+Menu.style.borderRadius = '5px';
+document.body.appendChild(Menu);
+Menu.textContent = `This is Menu :`;
+Menu.style.display = 'block';
+
+
+const PauseBtn = document.getElementById("PAW");
+PauseBtn.addEventListener("click", togglePause, false);
+var PawsOn = 0;
+// Toggle Pause
+function togglePause() {
+  if (PawsOn ==0 ){
+    Menu.textContent = `This is Menu :Pause Clicked!`;
+    PauseBtn.textContent = "PAUSE";
+
+  }else{
+    Menu.textContent = `This is Menu :`;
+    PauseBtn.textContent = "Pause";
+  }
+	PawsOn = 1 - PawsOn;	// toggles between 0 and 1
+ 
+}
 // Load Earth model
 const earthLoader = new GLTFLoader();
 earthLoader.load(
@@ -170,13 +202,16 @@ function animate() {
 
   // Move the ship around the Earth
   if (ship) {
-    const time = Date.now() * 0.001;
-    const radius = ship.position.length();
-    ship.position.x = Math.cos(time) * radius;
-    ship.position.z = Math.sin(time) * radius;
-    
-    // Make the ship face the direction of movement
-    ship.lookAt(earthGroup.position);
+    if (PawsOn == 0){
+      const time = Date.now() * 0.001;
+      const radius = ship.position.length();
+      ship.position.x = Math.cos(time) * radius;
+      ship.position.z = Math.sin(time) * radius;
+      
+      // Make the ship face the direction of movement
+      ship.lookAt(earthGroup.position);
+    }
+
   }
 
   controls.update();
