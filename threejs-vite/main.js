@@ -153,12 +153,13 @@ window.addEventListener('resize', () => {
 
 // Function to create a temporary hurricane image
 function createTemporaryHurricane(position) {
-  const geometry = new THREE.PlaneGeometry(1, 1);  // Plane with size 1x1
+  const hurricaneSize = 2;  // Increase this value to make the hurricane bigger (was 1 before)
+  const geometry = new THREE.PlaneGeometry(hurricaneSize, hurricaneSize);  // Larger plane
   const material = new THREE.MeshBasicMaterial({ map: hurricaneTexture, transparent: true });
   const hurricane = new THREE.Mesh(geometry, material);
 
   // Adjust the hurricane's position to be slightly above the Earth's surface
-  const offset = 0.2;  // Change this value to control how high above the surface the hurricane appears
+  const offset = 0.2;  // Controls how high above the surface the hurricane appears
   const direction = position.clone().normalize();  // Get the direction from the center of the Earth
   const raisedPosition = position.clone().addScaledVector(direction, offset);  // Add the offset
 
