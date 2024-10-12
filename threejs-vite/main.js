@@ -128,6 +128,83 @@ function createTemporaryCube(position) {
   }, 3000);
 }
 
+// // Handle mouse click
+// function onMouseClick(event) {
+//   // Calculate mouse position in normalized device coordinates
+//   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+//   // Update the picking ray with the camera and mouse position
+//   raycaster.setFromCamera(mouse, camera);
+
+//   // Calculate objects intersecting the picking ray
+//   const intersects = raycaster.intersectObjects(earthGroup.children, true);
+
+//   if (intersects.length > 0) {
+//     // Get the first intersected object (should be the Earth)
+//     const intersect = intersects[0];
+
+//     // Get the clicked point in world coordinates
+//     const clickedPoint = intersect.point;
+
+//     // Convert world coordinates to latitude and longitude
+//     const lat = 90 - Math.acos(clickedPoint.y / earthRadius) * 180 / Math.PI;
+//     const lon = (Math.atan2(clickedPoint.x, -clickedPoint.z) * 180 / Math.PI + 180) % 360 - 180;
+
+//     // Display coordinates on screen
+//     coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+//     coordsDiv.style.display = 'block';
+
+//     // Create a temporary cube at the clicked location
+//     createTemporaryCube(clickedPoint);
+//   } else {
+//     coordsDiv.style.display = 'none';
+//   }
+// }
+
+window.addEventListener('click', onMouseClick, false);
+// Function to convert latitude and longitude to Cartesian coordinates
+function latLonToCartesian(lat, lon, radius) {
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lon + 180) * (Math.PI / 180);
+
+  const x = -radius * Math.sin(phi) * Math.cos(theta);
+  const y = radius * Math.cos(phi);
+  const z = radius * Math.sin(phi) * Math.sin(theta);
+
+  return new THREE.Vector3(x, y, z);
+}
+
+// Function to animate the ship's movement
+function moveShipTo(destination) {
+  if (!ship) return;
+
+  const start = ship.position.clone();
+  const end = destination.clone();
+
+  const duration = 2; // Duration of the animation in seconds
+  let startTime = null;
+
+  function animateShip(time) {
+    if (!startTime) startTime = time;
+    const elapsedTime = (time - startTime) / 1000;
+
+    // Interpolate position
+    const t = Math.min(elapsedTime / duration, 1);
+    ship.position.lerpVectors(start, end, t);
+
+    // Make the ship face the direction of movement
+    ship.lookAt(earthGroup.position);
+
+    // Continue the animation until the duration is complete
+    if (t < 1) {
+      requestAnimationFrame(animateShip);
+    }
+  }
+
+  requestAnimationFrame(animateShip);
+}
+
 // Handle mouse click
 function onMouseClick(event) {
   // Calculate mouse position in normalized device coordinates
@@ -139,8 +216,6 @@ function onMouseClick(event) {
 
   // Calculate objects intersecting the picking ray
   const intersects = raycaster.intersectObjects(earthGroup.children, true);
-
-  let shipTargetPosition = null;
 
   if (intersects.length > 0) {
     // Get the first intersected object (should be the Earth)
@@ -157,17 +232,16 @@ function onMouseClick(event) {
     coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
     coordsDiv.style.display = 'block';
 
-    // Set the target position for the ship
-    shipTargetPosition = clickedPoint.clone();
+    // Convert latitude and longitude back to a 3D point on the Earth's surface
+    const destination = latLonToCartesian(lat, lon, earthRadius * 1.05); // The `1.05` ensures it’s slightly above the surface.
 
-    // Create a temporary cube at the clicked location
-    createTemporaryCube(clickedPoint);
+    // Move the ship to the destination
+    moveShipTo(destination);
   } else {
     coordsDiv.style.display = 'none';
   }
 }
 
-window.addEventListener('click', onMouseClick, false);
 
 // Animation loop
 function animate() {
@@ -183,6 +257,7 @@ function animate() {
     // Make the ship face the direction of movement
     ship.lookAt(earthGroup.position);
   }
+
 
   controls.update();
   renderer.render(scene, camera);
