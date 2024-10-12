@@ -35,6 +35,25 @@ const earthGroup = new THREE.Group();
 scene.add(earthGroup);
 
 let ship = null;
+let earth = null;
+let earthRadius = 0;
+
+// Raycaster setup
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+// Text display setup
+const coordsDiv = document.createElement('div');
+coordsDiv.style.position = 'absolute';
+coordsDiv.style.top = '10px';
+coordsDiv.style.left = '10px';
+coordsDiv.style.color = 'white';
+coordsDiv.style.fontSize = '14px';
+coordsDiv.style.fontFamily = 'Arial, sans-serif';
+coordsDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+coordsDiv.style.padding = '5px';
+coordsDiv.style.borderRadius = '5px';
+document.body.appendChild(coordsDiv);
 
 // Load Earth model
 const earthLoader = new GLTFLoader();
@@ -42,7 +61,7 @@ earthLoader.load(
   './models/Earth.glb',
   (gltf) => {
     console.log('Earth model loaded successfully');
-    const earth = gltf.scene;
+    earth = gltf.scene;
     earthGroup.add(earth);
     
     // Center the Earth
@@ -53,6 +72,7 @@ earthLoader.load(
     // Adjust camera position based on Earth size
     const size = box.getSize(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
+    earthRadius = maxDim / 2;
     camera.position.set(0, 0, maxDim * 2);
     camera.lookAt(0, 0, 0);
     
@@ -69,7 +89,6 @@ earthLoader.load(
         earthGroup.add(ship);
 
         // Position ship above Earth's surface
-        const earthRadius = maxDim / 2;
         ship.position.set(earthRadius * 1.0, 0, 0);
       },
       (xhr) => {
@@ -95,14 +114,59 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// Function to create a temporary cube
+function createTemporaryCube(position) {
+  const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+  const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  const cube = new THREE.Mesh(geometry, material);
+  cube.position.copy(position);
+  earthGroup.add(cube);
+
+  // Remove the cube after 3 seconds
+  setTimeout(() => {
+    earthGroup.remove(cube);
+  }, 3000);
+}
+
+// Handle mouse click
+function onMouseClick(event) {
+  // Calculate mouse position in normalized device coordinates
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // Update the picking ray with the camera and mouse position
+  raycaster.setFromCamera(mouse, camera);
+
+  // Calculate objects intersecting the picking ray
+  const intersects = raycaster.intersectObjects(earthGroup.children, true);
+
+  if (intersects.length > 0) {
+    // Get the first intersected object (should be the Earth)
+    const intersect = intersects[0];
+
+    // Get the clicked point in world coordinates
+    const clickedPoint = intersect.point;
+
+    // Convert world coordinates to latitude and longitude
+    const lat = 90 - Math.acos(clickedPoint.y / earthRadius) * 180 / Math.PI;
+    const lon = (Math.atan2(clickedPoint.x, -clickedPoint.z) * 180 / Math.PI + 180) % 360 - 180;
+
+    // Display coordinates on screen
+    coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+    coordsDiv.style.display = 'block';
+
+    // Create a temporary cube at the clicked location
+    createTemporaryCube(clickedPoint);
+  } else {
+    coordsDiv.style.display = 'none';
+  }
+}
+
+window.addEventListener('click', onMouseClick, false);
+
 // Animation loop
 function animate() {
   requestAnimationFrame(animate);
-
-  // Rotate the Earth
-  if (earthGroup.children.length > 0) {
-    earthGroup.rotation.y += 0.001;
-  }
 
   // Move the ship around the Earth
   if (ship) {
