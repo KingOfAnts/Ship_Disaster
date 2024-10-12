@@ -70,7 +70,7 @@ earthLoader.load(
 
         // Position ship above Earth's surface
         const earthRadius = maxDim / 2;
-        ship.position.set(earthRadius * 1.2, 0, 0);
+        ship.position.set(earthRadius * 1.0, 0, 0);
       },
       (xhr) => {
         console.log((xhr.loaded / xhr.total) * 100 + '% ship loaded');
