@@ -140,6 +140,8 @@ function onMouseClick(event) {
   // Calculate objects intersecting the picking ray
   const intersects = raycaster.intersectObjects(earthGroup.children, true);
 
+  let shipTargetPosition = null;
+
   if (intersects.length > 0) {
     // Get the first intersected object (should be the Earth)
     const intersect = intersects[0];
@@ -154,6 +156,9 @@ function onMouseClick(event) {
     // Display coordinates on screen
     coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
     coordsDiv.style.display = 'block';
+
+    // Set the target position for the ship
+    shipTargetPosition = clickedPoint.clone();
 
     // Create a temporary cube at the clicked location
     createTemporaryCube(clickedPoint);
