@@ -38,6 +38,12 @@ let ship = null;
 let earth = null;
 let earthRadius = 0;
 
+// Store the positions of the ports
+let santosPosition, glasgowPosition;
+let direction = 1; // 1 for moving to Glasgow, -1 for moving to Santos
+const speed = 0.005; // Speed of the ship
+let journeyProgress = 0; // Progress along the journey
+
 // Raycaster setup
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -55,7 +61,6 @@ coordsDiv.style.padding = '5px';
 coordsDiv.style.borderRadius = '5px';
 document.body.appendChild(coordsDiv);
 
-// Load Earth model
 const earthLoader = new GLTFLoader();
 earthLoader.load(
   './models/Earth.glb',
@@ -78,7 +83,6 @@ earthLoader.load(
     
     controls.update();
 
-    // Load ship model after Earth is loaded
     const shipLoader = new GLTFLoader();
     shipLoader.load(
       './models/ship.glb',
@@ -88,8 +92,8 @@ earthLoader.load(
         ship.scale.set(0.3, 0.3, 0.3); // Adjust scale as needed
         earthGroup.add(ship);
 
-        // Position ship above Earth's surface
-        ship.position.set(earthRadius * 1.0, 0, 0);
+        // Position ship at the Santos port
+        ship.position.copy(santosPosition);
       },
       (xhr) => {
         console.log((xhr.loaded / xhr.total) * 100 + '% ship loaded');
@@ -102,13 +106,13 @@ earthLoader.load(
     // Add Port of Santos (Brazil)
     const santosLat = -7;
     const santosLon = 7;
-    const santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
+    santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
     createPort(santosPosition, 0x0000ff);  // Blue for Santos port
 
     // Add Port of Glasgow (Scotland)
     const glasgowLat = 48;
-    const glasgowLon = 65;
-    const glasgowPosition = latLonToPosition(glasgowLat, glasgowLon, earthRadius);
+    const glasgowLon = 65; // Corrected longitude for Glasgow
+    glasgowPosition = latLonToPosition(glasgowLat, glasgowLon, earthRadius);
     createPort(glasgowPosition, 0xff0000);  // Red for Glasgow port
   },
   (xhr) => {
@@ -159,7 +163,7 @@ function createTemporaryHurricane(position) {
   const hurricane = new THREE.Mesh(geometry, material);
 
   // Adjust the hurricane's position to be slightly above the Earth's surface
-  const offset = 0.2;  // Controls how high above the surface the hurricane appears
+  const offset = 0.25;  // Controls how high above the surface the hurricane appears
   const direction = position.clone().normalize();  // Get the direction from the center of the Earth
   const raisedPosition = position.clone().addScaledVector(direction, offset);  // Add the offset
 
@@ -215,19 +219,44 @@ function onMouseClick(event) {
 
 window.addEventListener('click', onMouseClick, false);
 
-// Animation loop
+// Function to calculate the spherical interpolation
+function sphericalInterpolation(start, end, alpha) {
+  const startVector = start.clone().normalize();
+  const endVector = end.clone().normalize();
+
+  const dot = startVector.dot(endVector);
+  const theta = Math.acos(dot) * alpha; // Angle between the two points
+  const relativeVector = endVector.clone().sub(startVector.clone().multiplyScalar(dot)).normalize(); // Orthogonal vector
+
+  return startVector.clone().multiplyScalar(Math.cos(theta)).add(relativeVector.multiplyScalar(Math.sin(theta))).normalize().multiplyScalar(earthRadius);
+}
+
 function animate() {
   requestAnimationFrame(animate);
 
-  // Move the ship around the Earth
+  // Move the ship along the great-circle path
   if (ship) {
-    const time = Date.now() * 0.001;
-    const radius = ship.position.length();
-    ship.position.x = Math.cos(time) * radius;
-    ship.position.z = Math.sin(time) * radius;
-    
+    const start = santosPosition;
+    const end = glasgowPosition;
+
+    // Interpolate the position of the ship along the great circle
+    ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
+
     // Make the ship face the direction of movement
-    ship.lookAt(earthGroup.position);
+    const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed); // Calculate next position
+    ship.lookAt(earthGroup.position.clone().add(nextPosition)); // Look towards the next position
+
+    // Update journey progress
+    journeyProgress += speed; // Increase progress based on speed
+
+    // Check if the ship reached the target position
+    if (journeyProgress >= 1) {
+      // Switch direction and reset journey progress
+      direction *= -1;
+      journeyProgress = 0; // Reset progress for the new journey
+      // Swap start and end positions
+      [santosPosition, glasgowPosition] = [glasgowPosition, santosPosition];
+    }
   }
 
   controls.update();
