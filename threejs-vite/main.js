@@ -95,10 +95,10 @@ function togglePause() {
 }
 //
 const HurricaneBtn = document.getElementById("HUR");
-HurricaneBtn.addEventListener("click", select, false);
+HurricaneBtn.addEventListener("click", HurricaneOn, false);
 var HurOn = 0;
 // Toggle Pause
-function select() {
+function HurricaneOn() {
   if (HurOn ==0 ){
     Menu.textContent = `This is Menu :Hurricane Clicked!`;
     HurricaneBtn.textContent = "HURRICANE";
@@ -109,6 +109,22 @@ function select() {
   }
 	HurOn = 1 - HurOn;	// toggles between 0 and 1
  
+}
+//
+const EarthquakeBtn = document.getElementById("EAR");
+EarthquakeBtn.addEventListener("click", EarthquakeOn, false);
+var EarOn = 0;
+// Toggle Pause
+function EarthquakeOn() {
+  if (EarOn ==0 ){
+    Menu.textContent = `This is Menu :Earthquake Clicked!`;
+    EarthquakeBtn.textContent = "EARTHQUAKE";
+
+  }else{
+    Menu.textContent = `This is Menu :`;
+    EarthquakeBtn.textContent = "Earthquake";
+  }
+	EarOn = 1 - EarOn;	// toggles between 0 and 1
 }
 //--------------------------------------------------------------------------------------------------//
 // Load Earth model
@@ -236,7 +252,7 @@ function createTemporaryHurricane(position) {
 }
 
 function createTemporaryEarthquake(position) {
-  if (HurOn == 0){
+  if (EarOn == 1){
     
     const earthquakeSize = 2;  // Increase this value to make the hurricane bigger (was 1 before)
     const geometry = new THREE.PlaneGeometry(earthquakeSize, earthquakeSize);  // Larger plane
@@ -329,40 +345,42 @@ function sphericalInterpolation(start, end, alpha) {
 }
 
 function animate() {
-  requestAnimationFrame(animate);
+  
+    requestAnimationFrame(animate);
+    if (PawsOn == 0){
+     // Move the ship along the great-circle path
+      if (ship) {
+          
+        const start = santosPosition;
+        const end = glasgowPosition;
 
-  // Move the ship along the great-circle path
-  if (ship) {
-      if (PawsOn == 0){
-      const start = santosPosition;
-      const end = glasgowPosition;
+        // Interpolate the position of the ship along the great circle
+        ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
 
-      // Interpolate the position of the ship along the great circle
-      ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
+        // Make the ship face the direction of movement
+        const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed); // Calculate next position
+        ship.lookAt(earthGroup.position.clone().add(nextPosition)); // Look towards the next position
 
-      // Make the ship face the direction of movement
-      const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed); // Calculate next position
-      ship.lookAt(earthGroup.position.clone().add(nextPosition)); // Look towards the next position
+        // Update journey progress
+        journeyProgress += speed; // Increase progress based on speed
 
-      // Update journey progress
-      journeyProgress += speed; // Increase progress based on speed
-
-      // Check if the ship reached the target position
-      if (journeyProgress >= 1) {
-        // Switch direction and reset journey progress
-        direction *= -1;
-        journeyProgress = 0; // Reset progress for the new journey
-        // Swap start and end positions
-        [santosPosition, glasgowPosition] = [glasgowPosition, santosPosition];
-      }
+        // Check if the ship reached the target position
+        if (journeyProgress >= 1) {
+          // Switch direction and reset journey progress
+          direction *= -1;
+          journeyProgress = 0; // Reset progress for the new journey
+          // Swap start and end positions
+          [santosPosition, glasgowPosition] = [glasgowPosition, santosPosition];
+        }
+    }
+    
+    if (quakeGroup){
+      shakeEarth();
     }
   }
-  if (quakeGroup){
-    shakeEarth();
-  }
-
-  controls.update();
-  renderer.render(scene, camera);
+    controls.update();
+    renderer.render(scene, camera);
+  
 }
 
 animate();
