@@ -81,7 +81,7 @@ earthLoader.load(
     // Load ship model after Earth is loaded
     const shipLoader = new GLTFLoader();
     shipLoader.load(
-      './models/ship.glb',
+      './models/plane.glb',
       (gltf) => {
         console.log('Ship model loaded successfully');
         ship = gltf.scene;
