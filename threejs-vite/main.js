@@ -98,6 +98,19 @@ earthLoader.load(
         console.error('An error happened while loading the ship model', error);
       }
     );
+
+    // Add Port of Santos (Brazil)
+    const santosLat = -7;
+    const santosLon = 7;
+    const santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
+    createPort(santosPosition, 0x0000ff);  // Green for Santos port
+
+    // Add Port of Glasgow (Scotland)
+    const glasgowLat = 48;
+    const glasgowLon = 65;
+    const glasgowPosition = latLonToPosition(glasgowLat, glasgowLon, earthRadius);
+
+    createPort(glasgowPosition, 0xff0000);  // Red for Glasgow port
   },
   (xhr) => {
     console.log((xhr.loaded / xhr.total) * 100 + '% Earth loaded');
@@ -106,6 +119,27 @@ earthLoader.load(
     console.error('An error happened while loading the Earth model', error);
   }
 );
+
+// Function to convert latitude and longitude to 3D position
+function latLonToPosition(lat, lon, radius) {
+  const phi = (90 - lat) * (Math.PI / 180);  // Convert latitude to radians
+  const theta = (lon + 180) * (Math.PI / 180);  // Convert longitude to radians
+
+  const x = -radius * Math.sin(phi) * Math.cos(theta);
+  const y = radius * Math.cos(phi);
+  const z = radius * Math.sin(phi) * Math.sin(theta);
+
+  return new THREE.Vector3(x, y, z);
+}
+
+// Function to create port boxes
+function createPort(position, color = 0x0000ff) {
+  const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  const material = new THREE.MeshBasicMaterial({ color });
+  const box = new THREE.Mesh(geometry, material);
+  box.position.copy(position);
+  earthGroup.add(box);
+}
 
 // Handle window resize
 window.addEventListener('resize', () => {
