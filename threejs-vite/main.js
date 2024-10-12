@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-// Create scene
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xdddddd);
 
@@ -37,6 +36,7 @@ scene.add(earthGroup);
 let ship = null;
 let earth = null;
 let earthRadius = 0;
+
 
 // Store the positions of the ports
 let santosPosition, glasgowPosition;
@@ -103,17 +103,15 @@ earthLoader.load(
       }
     );
 
-    // Add Port of Santos (Brazil)
     const santosLat = -7;
     const santosLon = 7;
     santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
-    createPort(santosPosition, 0x0000ff);  // Blue for Santos port
+    createPort(santosPosition, 0x0000ff); 
 
-    // Add Port of Glasgow (Scotland)
     const glasgowLat = 48;
-    const glasgowLon = 65; // Corrected longitude for Glasgow
+    const glasgowLon = 65; 
     glasgowPosition = latLonToPosition(glasgowLat, glasgowLon, earthRadius);
-    createPort(glasgowPosition, 0xff0000);  // Red for Glasgow port
+    createPort(glasgowPosition, 0xff0000); 
   },
   (xhr) => {
     console.log((xhr.loaded / xhr.total) * 100 + '% Earth loaded');
