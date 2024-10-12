@@ -31,8 +31,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 // Create a group to hold the Earth and ship
 const earthGroup = new THREE.Group();
+const quakeGroup = new THREE.Group();
 scene.add(earthGroup);
-
+scene.add(quakeGroup);
 let ship = null;
 let earth = null;
 let earthRadius = 0;
@@ -75,7 +76,7 @@ Menu.style.borderRadius = '5px';
 document.body.appendChild(Menu);
 Menu.textContent = `This is Menu :`;
 Menu.style.display = 'block';
-
+//-------------------------------------------------------Buttons---------------------------------//
 
 const PauseBtn = document.getElementById("PAW");
 PauseBtn.addEventListener("click", togglePause, false);
@@ -91,8 +92,25 @@ function togglePause() {
     PauseBtn.textContent = "Pause";
   }
 	PawsOn = 1 - PawsOn;	// toggles between 0 and 1
+}
+//
+const HurricaneBtn = document.getElementById("HUR");
+HurricaneBtn.addEventListener("click", select, false);
+var HurOn = 0;
+// Toggle Pause
+function select() {
+  if (HurOn ==0 ){
+    Menu.textContent = `This is Menu :Hurricane Clicked!`;
+    HurricaneBtn.textContent = "HURRICANE";
+
+  }else{
+    Menu.textContent = `This is Menu :`;
+    HurricaneBtn.textContent = "Hurricane";
+  }
+	HurOn = 1 - HurOn;	// toggles between 0 and 1
  
 }
+//--------------------------------------------------------------------------------------------------//
 // Load Earth model
 const earthLoader = new GLTFLoader();
 earthLoader.load(
@@ -174,10 +192,11 @@ function createPort(position, color = 0x0000ff) {
   box.position.copy(position);
   earthGroup.add(box);
 }
-
-// Load hurricane texture
+// ------------------------------------------------------------------- natural disasters --------------------------------------
+// Load hurricane texture and earhtquake 
 const textureLoader = new THREE.TextureLoader();
 const hurricaneTexture = textureLoader.load('./models/hurricane.png');
+const earthquakeTexture = textureLoader.load('./models/Earthquake.png');
 
 // Handle window resize
 window.addEventListener('resize', () => {
@@ -188,31 +207,77 @@ window.addEventListener('resize', () => {
 
 // Function to create a temporary hurricane image
 function createTemporaryHurricane(position) {
-  const hurricaneSize = 2;  // Increase this value to make the hurricane bigger (was 1 before)
-  const geometry = new THREE.PlaneGeometry(hurricaneSize, hurricaneSize);  // Larger plane
-  const material = new THREE.MeshBasicMaterial({ map: hurricaneTexture, transparent: true });
-  const hurricane = new THREE.Mesh(geometry, material);
+  if (HurOn== 1){
+    const hurricaneSize = 2;  // Increase this value to make the hurricane bigger (was 1 before)
+    const geometry = new THREE.PlaneGeometry(hurricaneSize, hurricaneSize);  // Larger plane
+    const material = new THREE.MeshBasicMaterial({ map: hurricaneTexture, transparent: true });
+    const hurricane = new THREE.Mesh(geometry, material);
 
-  // Adjust the hurricane's position to be slightly above the Earth's surface
-  const offset = 0.25;  // Controls how high above the surface the hurricane appears
-  const direction = position.clone().normalize();  // Get the direction from the center of the Earth
-  const raisedPosition = position.clone().addScaledVector(direction, offset);  // Add the offset
+    // Adjust the hurricane's position to be slightly above the Earth's surface
+    const offset = 0.25;  // Controls how high above the surface the hurricane appears
+    const direction = position.clone().normalize();  // Get the direction from the center of the Earth
+    const raisedPosition = position.clone().addScaledVector(direction, offset);  // Add the offset
 
-  hurricane.position.copy(raisedPosition);
+    hurricane.position.copy(raisedPosition);
 
-  // Align the hurricane to face upwards relative to the Earth's surface
-  const axis = new THREE.Vector3(0, 1, 0);  // Axis that points upwards in local space
-  const up = new THREE.Vector3(0, 0, 1);  // Use Z-axis as the "up" vector for the plane
-  const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);  // Align Z-axis with the normal
-  hurricane.quaternion.copy(quaternion);
+    // Align the hurricane to face upwards relative to the Earth's surface
+    const axis = new THREE.Vector3(0, 1, 0);  // Axis that points upwards in local space
+    const up = new THREE.Vector3(0, 0, 1);  // Use Z-axis as the "up" vector for the plane
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);  // Align Z-axis with the normal
+    hurricane.quaternion.copy(quaternion);
 
-  earthGroup.add(hurricane);
+    earthGroup.add(hurricane);
 
-  // Remove the hurricane after 3 seconds
-  setTimeout(() => {
-    earthGroup.remove(hurricane);
-  }, 3000);
+    // Remove the hurricane after 3 seconds
+    setTimeout(() => {
+      earthGroup.remove(hurricane);
+    }, 3000);
+  }
 }
+
+function createTemporaryEarthquake(position) {
+  if (HurOn == 0){
+    
+    const earthquakeSize = 2;  // Increase this value to make the hurricane bigger (was 1 before)
+    const geometry = new THREE.PlaneGeometry(earthquakeSize, earthquakeSize);  // Larger plane
+    const material = new THREE.MeshBasicMaterial({ map: earthquakeTexture, transparent: true });
+    const earthquake = new THREE.Mesh(geometry, material);
+
+    // Adjust the hurricane's position to be slightly above the Earth's surface
+    const offset = 0.25;  // Controls how high above the surface the hurricane appears
+    const direction = position.clone().normalize();  // Get the direction from the center of the Earth
+    const raisedPosition = position.clone().addScaledVector(direction, offset);  // Add the offset
+
+    earthquake.position.copy(raisedPosition);
+
+    // Align the hurricane to face upwards relative to the Earth's surface
+    const axis = new THREE.Vector3(0, 1, 0);  // Axis that points upwards in local space
+    const up = new THREE.Vector3(0, 0, 1);  // Use Z-axis as the "up" vector for the plane
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);  // Align Z-axis with the normal
+    earthquake.quaternion.copy(quaternion);
+
+    earthGroup.add(earthquake);
+    quakeGroup.add(earthquake);
+    // Remove the hurricane after 3 seconds
+    setTimeout(() => {
+      earthGroup.remove(earthquake);
+      quakeGroup.remove(earthquake);
+    }, 3000);
+  }
+}
+function shakeEarth() {
+  // Generate random values for the 
+    quakeGroup.children.forEach(object => {
+    // Generate random values for the shake
+    const xShake = Math.random() * 0.2 - 0.1;
+    const yShake = Math.random() * 0.2 - 0.1;
+    const zShake = Math.random() * 0.2 - 0.1;
+
+    // Apply the shake to the object's position
+    object.position.set(object.position.x + xShake, object.position.y + yShake, object.position.z + zShake);
+    });
+}
+// -----------------------------------------------------------------------------------------------------------------------
 
 // Handle mouse click
 function onMouseClick(event) {
@@ -243,6 +308,7 @@ function onMouseClick(event) {
 
     // Create a temporary hurricane at the clicked location
     createTemporaryHurricane(clickedPoint);
+    createTemporaryEarthquake(clickedPoint);
   } else {
     coordsDiv.style.display = 'none';
   }
@@ -267,7 +333,7 @@ function animate() {
 
   // Move the ship along the great-circle path
   if (ship) {
-      if (PawsOn == 1){
+      if (PawsOn == 0){
       const start = santosPosition;
       const end = glasgowPosition;
 
@@ -290,6 +356,9 @@ function animate() {
         [santosPosition, glasgowPosition] = [glasgowPosition, santosPosition];
       }
     }
+  }
+  if (quakeGroup){
+    shakeEarth();
   }
 
   controls.update();
