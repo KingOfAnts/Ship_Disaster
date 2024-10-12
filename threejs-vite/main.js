@@ -163,6 +163,13 @@ function createTemporaryHurricane(position) {
   const raisedPosition = position.clone().addScaledVector(direction, offset);  // Add the offset
 
   hurricane.position.copy(raisedPosition);
+
+  // Align the hurricane to face upwards relative to the Earth's surface
+  const axis = new THREE.Vector3(0, 1, 0);  // Axis that points upwards in local space
+  const up = new THREE.Vector3(0, 0, 1);  // Use Z-axis as the "up" vector for the plane
+  const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);  // Align Z-axis with the normal
+  hurricane.quaternion.copy(quaternion);
+
   earthGroup.add(hurricane);
 
   // Remove the hurricane after 3 seconds
@@ -170,7 +177,6 @@ function createTemporaryHurricane(position) {
     earthGroup.remove(hurricane);
   }, 3000);
 }
-
 
 // Handle mouse click
 function onMouseClick(event) {
