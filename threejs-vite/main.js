@@ -103,13 +103,12 @@ earthLoader.load(
     const santosLat = -7;
     const santosLon = 7;
     const santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
-    createPort(santosPosition, 0x0000ff);  // Green for Santos port
+    createPort(santosPosition, 0x0000ff);  // Blue for Santos port
 
     // Add Port of Glasgow (Scotland)
     const glasgowLat = 48;
     const glasgowLon = 65;
     const glasgowPosition = latLonToPosition(glasgowLat, glasgowLon, earthRadius);
-
     createPort(glasgowPosition, 0xff0000);  // Red for Glasgow port
   },
   (xhr) => {
@@ -141,6 +140,10 @@ function createPort(position, color = 0x0000ff) {
   earthGroup.add(box);
 }
 
+// Load hurricane texture
+const textureLoader = new THREE.TextureLoader();
+const hurricaneTexture = textureLoader.load('./models/hurricane.png');
+
 // Handle window resize
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -148,19 +151,26 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Function to create a temporary cube
-function createTemporaryCube(position) {
-  const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-  const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-  const cube = new THREE.Mesh(geometry, material);
-  cube.position.copy(position);
-  earthGroup.add(cube);
+// Function to create a temporary hurricane image
+function createTemporaryHurricane(position) {
+  const geometry = new THREE.PlaneGeometry(1, 1);  // Plane with size 1x1
+  const material = new THREE.MeshBasicMaterial({ map: hurricaneTexture, transparent: true });
+  const hurricane = new THREE.Mesh(geometry, material);
 
-  // Remove the cube after 3 seconds
+  // Adjust the hurricane's position to be slightly above the Earth's surface
+  const offset = 0.2;  // Change this value to control how high above the surface the hurricane appears
+  const direction = position.clone().normalize();  // Get the direction from the center of the Earth
+  const raisedPosition = position.clone().addScaledVector(direction, offset);  // Add the offset
+
+  hurricane.position.copy(raisedPosition);
+  earthGroup.add(hurricane);
+
+  // Remove the hurricane after 3 seconds
   setTimeout(() => {
-    earthGroup.remove(cube);
+    earthGroup.remove(hurricane);
   }, 3000);
 }
+
 
 // Handle mouse click
 function onMouseClick(event) {
@@ -189,8 +199,8 @@ function onMouseClick(event) {
     coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
     coordsDiv.style.display = 'block';
 
-    // Create a temporary cube at the clicked location
-    createTemporaryCube(clickedPoint);
+    // Create a temporary hurricane at the clicked location
+    createTemporaryHurricane(clickedPoint);
   } else {
     coordsDiv.style.display = 'none';
   }
