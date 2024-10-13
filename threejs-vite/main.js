@@ -32,8 +32,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // Create a group to hold the Earth and ship
 const earthGroup = new THREE.Group();
 const quakeGroup = new THREE.Group();
-scene.add(earthGroup);
-scene.add(quakeGroup);
+const towerGroup = new THREE.Group();
+scene.add(earthGroup, quakeGroup, towerGroup);
+
 let ship = null;
 let earth = null;
 
@@ -211,7 +212,18 @@ function createPort(position, color = 0x0000ff) {
         console.log('Tower model loaded successfully');
         Tower = gltf.scene;
         Tower.scale.set(0.5, 0.5, 0.5); // Adjust scale as needed
-        earthGroup.add(Tower);
+
+        Tower.name = 'Tower';
+
+        // creates a box geometry for the tower to detect collisions
+        const towerGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+        const towerMaterial = new THREE.MeshBasicMaterial({ color: 0x00f00 });
+        const towerMesh = new THREE.Mesh(towerGeometry, towerMaterial);
+
+        // Add the tower mesh to the tower group
+        Tower.add(towerMesh);
+
+        towerGroup.add(Tower);
 
         // Position ship at the Santos port
         Tower.position.copy(position);
@@ -222,12 +234,8 @@ function createPort(position, color = 0x0000ff) {
       (error) => {
         console.error('An error happened while loading the Tower model', error);
       });
-  //const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-  //const material = new THREE.MeshBasicMaterial({ color });
-  //const box = new THREE.Mesh(geometry, material);
-  //box.position.copy(position);
-  //earthGroup.add(box);
 }
+
 // ------------------------------------------------------------------- natural disasters --------------------------------------
 // Load hurricane texture and earhtquake 
 const textureLoader = new THREE.TextureLoader();
@@ -301,6 +309,40 @@ function createTemporaryEarthquake(position) {
     }, 3000);
   }
 }
+
+function detectCollision(object1, object2){
+  var box1 = new THREE.Box3();
+  var box2 = new THREE.Box3();
+  if (!object1 || !object2) {
+    console.error('One of the objects is undefined:', { object1, object2 });
+    return false;
+  }
+
+  if (!object1.geometry.boundingBox) {
+    object1.geometry.computeBoundingBox();
+  }
+
+  object2.traverse((child) => {
+    if (child.isMesh) {
+      if (!child.geometry.boundingBox) {
+        child.geometry.computeBoundingBox();
+      }
+      const childBox = child.geometry.boundingBox.clone().applyMatrix4(child.matrixWorld);
+      box2.union(childBox);
+    }
+  }); 
+
+  box1 = object1.geometry.boundingBox.clone().applyMatrix4(object1.matrixWorld);
+
+  return box1.intersectsBox(box2);
+}
+
+function reduceHealth(obj1, obj2){
+  if (detectCollision(obj1, obj2)){
+    console.log('Collision detected');
+  }
+}
+
 function shakeEarth() {
   // Generate random values for the 
     quakeGroup.children.forEach(object => {
@@ -345,6 +387,13 @@ function onMouseClick(event) {
     // Create a temporary hurricane at the clicked location
     createTemporaryHurricane(clickedPoint);
     createTemporaryEarthquake(clickedPoint);
+
+    // Check for collision between the earthquake and the towers
+    towerGroup.children.forEach((Tower) => {
+      quakeGroup.children.forEach((earthquake) => {
+        reduceHealth(earthquake, Tower);});
+    });
+
   } else {
     coordsDiv.style.display = 'none';
   }
