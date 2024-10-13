@@ -36,15 +36,15 @@ let ship = null;
 let earth = null;
 let earthRadius = 0;
 
-let santosPosition, glasgowPosition, tokyoPosition; 
-let journeyProgress = 0;
-let currentTarget = 0; 
+let towerPositions = [];
+let direction = 1;
 const speed = 0.005;
+let journeyProgress = 0;
+let currentTarget = 0;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-// Display Divs
 const coordsDiv = document.createElement('div');
 coordsDiv.style.position = 'absolute';
 coordsDiv.style.top = '10px';
@@ -90,8 +90,6 @@ function changeHappy(value) {
   const percentage = HappyBar.value;
   const color = `linear-gradient(to right, black ${100 - percentage}%, #ff9e2c ${percentage}%)`;
   HappyBar.style.background = color;
-
-  console.log(`Happiness updated to ${HappyBar.value}%`);
 }
 
 const PauseBtn = document.getElementById("PAW");
@@ -124,7 +122,6 @@ ResetBtn.addEventListener("click", resetHappiness, false);
 
 function resetHappiness() {
   HappyBar.value = 100;
-  console.log("Happiness reset to 100%");
 }
 
 const earthLoader = new GLTFLoader();
@@ -149,21 +146,17 @@ earthLoader.load('./models/Earth.glb', (gltf) => {
     ship = gltf.scene;
     ship.scale.set(0.1, 0.1, 0.1);
     earthGroup.add(ship);
-    ship.position.copy(santosPosition);
+    ship.position.copy(towerPositions[0]);
   });
 
-  // Positions for Santos, Glasgow, and Tokyo
-  const santosLat = -7, santosLon = 7;
-  const glasgowLat = 48, glasgowLon = 65;
-  const tokyoLat = 35, tokyoLon = 139;
-
-  santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
-  glasgowPosition = latLonToPosition(glasgowLat, glasgowLon, earthRadius);
-  tokyoPosition = latLonToPosition(tokyoLat, tokyoLon, earthRadius);
-
-  createPort(santosPosition, 0x0000ff);
-  createPort(glasgowPosition, 0xff0000);
-  createPort(tokyoPosition, 0x00ff00);
+  const numTowers = Math.floor(Math.random() * (6 - 2 + 1)) + 2;
+  for (let i = 0; i < numTowers; i++) {
+    const lat = Math.random() * 180 - 90;
+    const lon = Math.random() * 360 - 180;
+    const position = latLonToPosition(lat, lon, earthRadius);
+    towerPositions.push(position);
+    createPort(position, 0x0000ff);
+  }
 });
 
 function latLonToPosition(lat, lon, radius) {
@@ -184,7 +177,7 @@ function createPort(position, color = 0x0000ff) {
     Tower.scale.set(0.5, 0.5, 0.5);
     
     const direction = position.clone().normalize();
-    const up = new THREE.Vector3(0, 1, 0); 
+    const up = new THREE.Vector3(0, 1, 0);
     const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
     Tower.quaternion.copy(quaternion);
 
@@ -257,6 +250,56 @@ function createTemporaryEarthquake(position) {
   }
 }
 
+function detectCollision(object1, object2) {
+  const box1 = new THREE.Box3().setFromObject(object1);
+  const box2 = new THREE.Box3().setFromObject(object2);
+  return box1.intersectsBox(box2);
+}
+
+function reduceHealth(obj1, obj2) {
+  if (detectCollision(obj1, obj2)) {
+    changeHappy(-5);
+  }
+}
+
+function shakeEarth() {
+  quakeGroup.children.forEach(object => {
+    const xShake = Math.random() * 0.2 - 0.1;
+    const yShake = Math.random() * 0.2 - 0.1;
+    const zShake = Math.random() * 0.2 - 0.1;
+    object.position.set(object.position.x + xShake, object.position.y + yShake, object.position.z);
+  });
+}
+
+function onMouseClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(earthGroup.children, true);
+
+  if (intersects.length > 0) {
+    const clickedPoint = intersects[0].point;
+    const lat = 90 - Math.acos(clickedPoint.y / earthRadius) * 180 / Math.PI;
+    const lon = (Math.atan2(clickedPoint.x, -clickedPoint.z) * 180 / Math.PI + 180) % 360 - 180;
+    coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+    coordsDiv.style.display = 'block';
+
+    createTemporaryHurricane(clickedPoint);
+    createTemporaryEarthquake(clickedPoint);
+
+    towerGroup.children.forEach((Tower) => {
+      quakeGroup.children.forEach((earthquake) => {
+        reduceHealth(earthquake, Tower);
+      });
+    });
+  } else {
+    coordsDiv.style.display = 'none';
+  }
+}
+
+window.addEventListener('click', onMouseClick, false);
+
 function sphericalInterpolation(start, end, alpha) {
   const startVector = start.clone().normalize();
   const endVector = end.clone().normalize();
@@ -269,10 +312,9 @@ function sphericalInterpolation(start, end, alpha) {
 function animate() {
   requestAnimationFrame(animate);
 
-  if (PawsOn == 0 && ship) {
-    const targets = [santosPosition, glasgowPosition, tokyoPosition]; 
-    const start = targets[currentTarget];
-    const end = targets[(currentTarget + 1) % 3]; 
+  if (PawsOn == 0 && ship && towerPositions.length > 1) {
+    const start = towerPositions[currentTarget];
+    const end = towerPositions[(currentTarget + 1) % towerPositions.length];
 
     ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
     const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed);
@@ -280,8 +322,8 @@ function animate() {
     journeyProgress += speed;
 
     if (journeyProgress >= 1) {
-      currentTarget = (currentTarget + 1) % 3; 
-      journeyProgress = 0; 
+      currentTarget = (currentTarget + 1) % towerPositions.length;
+      journeyProgress = 0;
     }
   }
 
