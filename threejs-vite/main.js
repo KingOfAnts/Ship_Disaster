@@ -66,7 +66,7 @@ Menu.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
 Menu.style.padding = '5px';
 Menu.style.borderRadius = '5px';
 document.body.appendChild(Menu);
-Menu.textContent = `This is Menu :`;
+Menu.textContent = "";
 
 const HappyBar = document.getElementById("HAP");
 
@@ -187,29 +187,25 @@ function createPort(position, color = 0x0000ff) {
     
     // Make tower perpendicular to the surface
     const direction = position.clone().normalize();
-    const up = new THREE.Vector3(0, 1, 0); // Assuming the tower's "up" is along Y-axis
-    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
-    Tower.quaternion.copy(quaternion);
+      towerGroup.add(Tower);
 
-        towerGroup.add(Tower);
+      // Position tower at the Santos port
+      Tower.position.copy(position);
 
-        // Position ship at the Santos port
-        Tower.position.copy(position);
+      // Calculate the normal vector at the tower's position
+      const normal = position.clone().normalize();
 
-        // Calculate the normal vector at the tower's position
-        const normal = position.clone().normalize();
-
-        // Align the tower to stand straight from the Earth
-        const up = new THREE.Vector3(0, 1, 0); // Assuming Y-axis is up
-        const quaternion = new THREE.Quaternion().setFromUnitVectors(up, normal);
-        Tower.quaternion.copy(quaternion);
-      },
-      (xhr) => {
-        console.log((xhr.loaded / xhr.total) * 100 + '% Tower loaded');
-      },
-      (error) => {
-        console.error('An error happened while loading the Tower model', error);
-      });
+      // Align the tower to stand straight from the Earth
+      const up = new THREE.Vector3(0, 1, 0); // Assuming Y-axis is up
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(up, normal);
+      Tower.quaternion.copy(quaternion);
+    },
+    (xhr) => {
+      console.log((xhr.loaded / xhr.total) * 100 + '% Tower loaded');
+    },
+    (error) => {
+      console.error('An error happened while loading the Tower model', error);
+    });
 }
 
 const textureLoader = new THREE.TextureLoader();
@@ -372,8 +368,20 @@ function animate() {
     const end = glasgowPosition;
     ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
     const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed);
+
     ship.lookAt(earthGroup.position.clone().add(nextPosition));
     journeyProgress += speed;
+
+    // Get position of ship
+    const shipPosition = ship.position.clone();
+
+    // Calculate the normal vector at the ship's position
+    const shipNormal = shipPosition.clone().normalize();
+
+    // Align the ship to stand straight from the Earth
+    const up = new THREE.Vector3(0, 1, 0); // Assuming Y-axis is up
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, shipNormal);
+    ship.quaternion.copy(quaternion);
 
     if (journeyProgress >= 1) {
       direction *= -1;
