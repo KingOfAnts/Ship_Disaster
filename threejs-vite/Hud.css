@@ -1,0 +1,70 @@
+body {
+    overflow: hidden;
+    margin: 0;
+    background-color: #e0e0e0;
+    font-family: 'Arial', sans-serif;
+}
+
+button {
+    display: block;
+    position: fixed;
+    right: 100px;
+    background: #4CAF50;
+    border: none;
+    border-radius: 1em;
+    text-align: center;
+    font-family: sans-serif;
+    font-size: 1.2rem;
+    padding: 15px 30px;
+    color: white;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    cursor: pointer;
+    background: #45a049;
+}
+
+.Pause {
+    top: 100px;
+}
+
+.Hurricane {
+    top: 200px;
+}
+
+.Earthquake {
+    top: 300px;
+}
+
+.ResetHappiness {
+    top: 400px;
+}
+
+.Happyness {
+    position: fixed;
+    width: 300px;
+    height: 30px;
+    left: 70px;
+    top: 50px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 100px;
+    transform-origin: 0 100%;
+    transform: rotate(90deg);
+    overflow: hidden;
+    border: 2px solid black;
+}
+
+.Happyness::-webkit-progress-bar {
+    height: 30px;
+    background-color: #000;
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.Happyness::-webkit-progress-value {
+    height: 100%;
+    background: linear-gradient(to right, black, #ff9e2c);
+    border-radius: 100px;
+    transition: width 0.5s ease-in-out;
+}
