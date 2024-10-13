@@ -9,7 +9,7 @@ button {
     display: block;
     position: fixed;
     right: 100px;
-    background: #4CAF50;
+    background: #ff9e2c;
     border: none;
     border-radius: 1em;
     text-align: center;
@@ -22,7 +22,7 @@ button {
 
 button:hover {
     cursor: pointer;
-    background: #1f5622;
+    background: #ff5500;
 }
 
 .Pause {
