@@ -446,22 +446,30 @@ function animate() {
   if (PawsOn == 0 && ship && towerPositions.length > 1) {
     const start = towerPositions[currentTarget];
     const end = towerPositions[(currentTarget + 1) % towerPositions.length];
-    ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
+    const currentPosition = sphericalInterpolation(start, end, journeyProgress);
     const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed);
 
-    ship.lookAt(end);//earthGroup.position.clone().add(nextPosition));
+    ship.position.copy(currentPosition);
+
+    // Calculate direction vector
+    const direction = new THREE.Vector3().subVectors(nextPosition, currentPosition).normalize();
+
+    // Calculate the normal vector at the ship's position (pointing outward from Earth's center)
+    const normal = currentPosition.clone().normalize();
+
+    // Calculate the right vector
+    const right = new THREE.Vector3().crossVectors(direction, normal).normalize();
+
+    // Recalculate the up vector to ensure it's perpendicular to both direction and right
+    const up = new THREE.Vector3().crossVectors(right, direction).normalize();
+
+    // Create a rotation matrix
+    const rotationMatrix = new THREE.Matrix4().makeBasis(right, up, direction.negate());
+
+    // Apply the rotation to the ship
+    ship.quaternion.setFromRotationMatrix(rotationMatrix);
+
     journeyProgress += speed;
-
-    // Get position of ship
-    const shipPosition = ship.position.clone();
-
-    // Calculate the normal vector at the ship's position
-    const shipNormal = shipPosition.clone().normalize();
-
-    // Align the ship to stand straight from the Earth
-    const up = new THREE.Vector3(0, 1, 0); // Assuming Y-axis is up
-    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, shipNormal);
-    ship.quaternion.copy(quaternion);
 
     if (journeyProgress >= 1) {
       currentTarget = (currentTarget + 1) % towerPositions.length;
@@ -470,8 +478,9 @@ function animate() {
     }
     updateTrail();
     quakeGroup.children.forEach((earthquake) => {
-      shakeEarth();}
-    )};
+      shakeEarth();
+    });
+  }
 
   trackShip();
   cameraDiv.textContent = `Camera Position: X=${camera.position.x.toFixed(2)}, Y=${camera.position.y.toFixed(2)}, Z=${camera.position.z.toFixed(2)}`;
