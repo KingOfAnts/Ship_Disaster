@@ -246,6 +246,14 @@ function createPort(position, color = 0x0000ff) {
 
         // Position ship at the Santos port
         Tower.position.copy(position);
+
+        // Calculate the normal vector at the tower's position
+        const normal = position.clone().normalize();
+
+        // Align the tower to stand straight from the Earth
+        const up = new THREE.Vector3(0, 1, 0); // Assuming Y-axis is up
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(up, normal);
+        Tower.quaternion.copy(quaternion);
       },
       (xhr) => {
         console.log((xhr.loaded / xhr.total) * 100 + '% Tower loaded');
