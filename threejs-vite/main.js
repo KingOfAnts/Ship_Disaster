@@ -3,7 +3,12 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff);
+
+// Load the new background image
+const textureLoader = new THREE.TextureLoader();
+const backgroundTexture = textureLoader.load('./models/background.jpg', () => {
+  scene.background = backgroundTexture;
+});
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
@@ -17,13 +22,19 @@ document.body.appendChild(renderer.domElement);
 const ambientLight = new THREE.AmbientLight(0xffffff, 2);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 4);
 directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
 
 const pointLight = new THREE.PointLight(0xffffff, 1, 100);
 pointLight.position.set(0, 5, 0);
 scene.add(pointLight);
+
+
+const yellowLight = new THREE.DirectionalLight(0xffffff, 2);
+yellowLight.position.set(-1, -1, -1); 
+scene.add(yellowLight);
+
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
@@ -233,7 +244,6 @@ function createPort(position, color = 0x0000ff) {
   });
 }
 
-const textureLoader = new THREE.TextureLoader();
 const hurricaneTexture = textureLoader.load('./models/hurricane.png');
 const earthquakeTexture = textureLoader.load('./models/Earthquake.png');
 
