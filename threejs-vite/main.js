@@ -597,9 +597,14 @@ function animate() {
 
     if (journeyProgress >= 1) {
       currentTarget = (currentTarget + 1) % towerPositions.length;
-      if( cargo != "spoilt" ){
-        changeHappy(10);
+      if( cargo == "oil" ){
+        changeHappy(13);
+      }else if( cargo == "fish" ){
+        changeHappy(2);
+      }else ( cargo == "spoilt" ){
+        changeHappy(0);
       }
+    
       journeyProgress = 0;
       cargo = cargoList[Math.floor(Math.random() * cargoList.length)];
       cargo = cargoList[Math.floor(Math.random() * cargoList.length)];
