@@ -350,7 +350,7 @@ function detectCollision(object1, object2){
 
 function reduceHealth(obj1, obj2){
   if (detectCollision(obj1, obj2)){
-    console.log('Collision detected');
+    changeHappy(-5);
   }
 }
 
