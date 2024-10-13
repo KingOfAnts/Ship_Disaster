@@ -5,8 +5,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xdddddd);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
 camera.position.z = 5;
+camera.position.x = 5;
+camera.position.y = 5;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -42,6 +44,7 @@ let journeyProgress = 0;
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// Display Divs
 const coordsDiv = document.createElement('div');
 coordsDiv.style.position = 'absolute';
 coordsDiv.style.top = '10px';
@@ -53,6 +56,18 @@ coordsDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
 coordsDiv.style.padding = '5px';
 coordsDiv.style.borderRadius = '5px';
 document.body.appendChild(coordsDiv);
+
+const cameraDiv = document.createElement('div');
+cameraDiv.style.position = 'absolute';
+cameraDiv.style.top = '50px';
+cameraDiv.style.left = '10px';
+cameraDiv.style.color = 'white';
+cameraDiv.style.fontSize = '14px';
+cameraDiv.style.fontFamily = 'Arial, sans-serif';
+cameraDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+cameraDiv.style.padding = '5px';
+cameraDiv.style.borderRadius = '5px';
+document.body.appendChild(cameraDiv);
 
 const Menu = document.createElement('Menu');
 Menu.style.position = 'absolute';
@@ -165,9 +180,8 @@ function createPort(position, color = 0x0000ff) {
     const Tower = gltf.scene;
     Tower.scale.set(0.5, 0.5, 0.5);
     
-    // Make tower perpendicular to the surface
     const direction = position.clone().normalize();
-    const up = new THREE.Vector3(0, 1, 0); // Assuming the tower's "up" is along Y-axis
+    const up = new THREE.Vector3(0, 1, 0); 
     const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
     Tower.quaternion.copy(quaternion);
 
@@ -320,6 +334,9 @@ function animate() {
   if (quakeGroup) {
     shakeEarth();
   }
+
+  // Display camera position
+  cameraDiv.textContent = `Camera Position: X=${camera.position.x.toFixed(2)}, Y=${camera.position.y.toFixed(2)}, Z=${camera.position.z.toFixed(2)}`;
 
   controls.update();
   renderer.render(scene, camera);
