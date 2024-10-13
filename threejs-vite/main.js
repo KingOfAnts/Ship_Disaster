@@ -601,9 +601,9 @@ function animate() {
         changeHappy(13);
       }else if( cargo == "fish" ){
         changeHappy(2);
-      }else ( cargo == "spoilt" ){
+      }else {
         changeHappy(0);
-      }
+      };
     
       journeyProgress = 0;
       cargo = cargoList[Math.floor(Math.random() * cargoList.length)];
