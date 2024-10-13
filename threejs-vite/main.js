@@ -38,6 +38,8 @@ let earth = null;
 let earthRadius = 0;
 
 let towerPositions = [];
+const cargoList = ["seafood", "oil"];
+let cargo = "seafood"; // set initial cargo
 let direction = 1;
 const speed = 0.005;
 let journeyProgress = 0;
@@ -91,11 +93,26 @@ Cargo.src = 'models/Earthquake.png';
 Cargo.style.position = 'absolute';
 Cargo.style.bottom = '10px';
 Cargo.style.left = '100px';
-Cargo.style.width = '100px'; // Adjust size as needed
+Cargo.style.width = '100px';
 Cargo.style.height = '100px';
 Cargo.style.color = 'black';
 Cargo.style.padding = '5px';
 Cargo.style.borderRadius = '5px';
+
+const cargoContainer = document.createElement('div');
+cargoContainer.style.position = 'absolute';
+cargoContainer.style.bottom = '20px'; // Position it at the bottom
+cargoContainer.style.left = '20px'; // Position it to the left
+cargoContainer.style.display = 'flex';
+cargoContainer.style.alignItems = 'center';
+document.body.appendChild(cargoContainer);
+
+// Create Image Element for Cargo
+const cargoImg = document.createElement('img');
+cargoImg.style.width = '100px'; // Adjust size as needed
+cargoImg.style.height = 'auto'; // Maintain aspect ratio
+cargoImg.style.display = 'none'; // Initially hidden
+cargoContainer.appendChild(cargoImg);
 
 //Cargo.tagName =null;
 document.body.appendChild(Cargo);
@@ -225,6 +242,23 @@ earthLoader.load('./models/Earth.glb', (gltf) => {
     createPort(position, 0x0000ff);
   }
 });
+
+// for (let i = 0; i < numTowers; i++) {
+//   const lat = Math.random() * 180 - 90;
+//   const lon = Math.random() * 360 - 180;
+//   const position = latLonToPosition(lat, lon, earthRadius);
+//   towerPositions.push(position);
+//   createPort(position, 0x0000ff);
+
+//   const cargo = Math.random() > 0.5 ? 'seafood' : 'oil';
+//   cargoTypes.push(cargo);
+// }
+
+function updateCargo() {
+  const currentCargo = cargoTypes[currentTarget];
+  console.log(`The ship is now carrying ${currentCargo}`);
+  Cargo.src = currentCargo === 'seafood' ? 'models/seafood.png' : 'models/oil.png';  // Adjust your image paths accordingly
+}
 
 function latLonToPosition(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -517,30 +551,34 @@ function animate() {
 
     ship.position.copy(currentPosition);
 
-    // Calculate direction vector
     const direction = new THREE.Vector3().subVectors(nextPosition, currentPosition).normalize();
 
-    // Calculate the normal vector at the ship's position (pointing outward from Earth's center)
     const normal = currentPosition.clone().normalize();
 
-    // Calculate the right vector
     const right = new THREE.Vector3().crossVectors(direction, normal).normalize();
 
-    // Recalculate the up vector to ensure it's perpendicular to both direction and right
     const up = new THREE.Vector3().crossVectors(right, direction).normalize();
 
-    // Create a rotation matrix
     const rotationMatrix = new THREE.Matrix4().makeBasis(right, up, direction.negate());
 
-    // Apply the rotation to the ship
     ship.quaternion.setFromRotationMatrix(rotationMatrix);
 
     journeyProgress += speed;
 
     if (journeyProgress >= 1) {
       currentTarget = (currentTarget + 1) % towerPositions.length;
-      changeHappy(10);
+      if( cargo != "spoilt" ){
+        changeHappy(10);
+      }
       journeyProgress = 0;
+      cargo = cargoList[Math.floor(Math.random() * cargoList.length)];
+      cargo = cargoList[Math.floor(Math.random() * cargoList.length)];
+      console.log(`Cargo assigned: ${cargo}`);
+
+      // cargoImg.src = `models/${cargo}.png`;
+      cargoImg.src = `models/happy.png`;
+      cargoImg.alt = `${cargo}`;
+      cargoImg.style.display = 'block';
     }
     updateTrail();
     quakeGroup.children.forEach((earthquake) => {
