@@ -110,6 +110,7 @@ let HurOn = 0;
 
 function toggleHurricane() {
   HurOn = 1 - HurOn;
+  HurricaneBtn.textContent = HurOn ? "Hurricane:ON" : "Hurricane:OFF";
 }
 
 const EarthquakeBtn = document.getElementById("EAR");
@@ -118,6 +119,7 @@ let EarOn = 0;
 
 function toggleEarthquake() {
   EarOn = 1 - EarOn;
+  EarthquakeBtn.textContent = EarOn ? "Earthquake:ON" : "Earthquake:OFF";
 }
 
 const ResetBtn = document.getElementById("RESET");
@@ -372,7 +374,7 @@ function animate() {
     ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
     const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed);
 
-    ship.lookAt(earthGroup.position.clone().add(nextPosition));
+    ship.lookAt(end);//earthGroup.position.clone().add(nextPosition));
     journeyProgress += speed;
 
     // Get position of ship
@@ -388,6 +390,7 @@ function animate() {
 
     if (journeyProgress >= 1) {
       currentTarget = (currentTarget + 1) % 3; 
+      changeHappy(10);
       journeyProgress = 0; 
     }
 
