@@ -5,8 +5,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xdddddd);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
 camera.position.z = 5;
+camera.position.x = 5;
+camera.position.y = 5;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -35,14 +37,15 @@ let ship = null;
 let earth = null;
 let earthRadius = 0;
 
-let santosPosition, glasgowPosition;
-let direction = 1;
-const speed = 0.005;
+let santosPosition, glasgowPosition, tokyoPosition; 
 let journeyProgress = 0;
+let currentTarget = 0; 
+const speed = 0.005;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// Display Divs
 const coordsDiv = document.createElement('div');
 coordsDiv.style.position = 'absolute';
 coordsDiv.style.top = '10px';
@@ -54,6 +57,18 @@ coordsDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
 coordsDiv.style.padding = '5px';
 coordsDiv.style.borderRadius = '5px';
 document.body.appendChild(coordsDiv);
+
+const cameraDiv = document.createElement('div');
+cameraDiv.style.position = 'absolute';
+cameraDiv.style.top = '50px';
+cameraDiv.style.left = '10px';
+cameraDiv.style.color = 'white';
+cameraDiv.style.fontSize = '14px';
+cameraDiv.style.fontFamily = 'Arial, sans-serif';
+cameraDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+cameraDiv.style.padding = '5px';
+cameraDiv.style.borderRadius = '5px';
+document.body.appendChild(cameraDiv);
 
 const Menu = document.createElement('Menu');
 Menu.style.position = 'absolute';
@@ -157,15 +172,18 @@ earthLoader.load('./models/Earth.glb', (gltf) => {
       }
     );
 
-  const santosLat = -7;
-  const santosLon = 7;
-  santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
-  createPort(santosPosition, 0x0000ff);
+  // Positions for Santos, Glasgow, and Tokyo
+  const santosLat = -7, santosLon = 7;
+  const glasgowLat = 48, glasgowLon = 65;
+  const tokyoLat = 35, tokyoLon = 139;
 
-  const glasgowLat = 48;
-  const glasgowLon = 65;
+  santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
   glasgowPosition = latLonToPosition(glasgowLat, glasgowLon, earthRadius);
+  tokyoPosition = latLonToPosition(tokyoLat, tokyoLon, earthRadius);
+
+  createPort(santosPosition, 0x0000ff);
   createPort(glasgowPosition, 0xff0000);
+  createPort(tokyoPosition, 0x00ff00);
 });
 
 function latLonToPosition(lat, lon, radius) {
@@ -185,27 +203,14 @@ function createPort(position, color = 0x0000ff) {
     const Tower = gltf.scene;
     Tower.scale.set(0.5, 0.5, 0.5);
     
-    // Make tower perpendicular to the surface
     const direction = position.clone().normalize();
-      towerGroup.add(Tower);
+    const up = new THREE.Vector3(0, 1, 0); 
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
+    Tower.quaternion.copy(quaternion);
 
-      // Position tower at the Santos port
-      Tower.position.copy(position);
-
-      // Calculate the normal vector at the tower's position
-      const normal = position.clone().normalize();
-
-      // Align the tower to stand straight from the Earth
-      const up = new THREE.Vector3(0, 1, 0); // Assuming Y-axis is up
-      const quaternion = new THREE.Quaternion().setFromUnitVectors(up, normal);
-      Tower.quaternion.copy(quaternion);
-    },
-    (xhr) => {
-      console.log((xhr.loaded / xhr.total) * 100 + '% Tower loaded');
-    },
-    (error) => {
-      console.error('An error happened while loading the Tower model', error);
-    });
+    towerGroup.add(Tower);
+    Tower.position.copy(position);
+  });
 }
 
 const textureLoader = new THREE.TextureLoader();
@@ -364,8 +369,10 @@ function animate() {
   requestAnimationFrame(animate);
 
   if (PawsOn == 0 && ship) {
-    const start = santosPosition;
-    const end = glasgowPosition;
+    const targets = [santosPosition, glasgowPosition, tokyoPosition]; 
+    const start = targets[currentTarget];
+    const end = targets[(currentTarget + 1) % 3]; 
+
     ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
     const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed);
 
@@ -384,17 +391,12 @@ function animate() {
     ship.quaternion.copy(quaternion);
 
     if (journeyProgress >= 1) {
-      HappyBar.value = HappyBar.value + 5;
-      console.log(HappyBar.value);
-      direction *= -1;
-      journeyProgress = 0;
-      [santosPosition, glasgowPosition] = [glasgowPosition, santosPosition];
+      currentTarget = (currentTarget + 1) % 3; 
+      journeyProgress = 0; 
     }
   }
 
-  if (quakeGroup) {
-    shakeEarth();
-  }
+  cameraDiv.textContent = `Camera Position: X=${camera.position.x.toFixed(2)}, Y=${camera.position.y.toFixed(2)}, Z=${camera.position.z.toFixed(2)}`;
 
   controls.update();
   renderer.render(scene, camera);
