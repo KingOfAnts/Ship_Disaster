@@ -1,117 +1,70 @@
 body {
     overflow: hidden;
     margin: 0;
-    }
-  
-    .Pause {
-          display: block;
-          position: fixed;
-          right: 100px;
-          top: 100px;
-          background: none;
-          border: none;
-          border-radius: 1em;
-          text-align: center;
-          font-family: sans-serif;
-          font-size: 150%;
-          padding: 20px;
-    }
-  
-    .Pause:hover {
-          cursor: pointer;
-          border: solid 1px gray;
-          background: rgba( 255, 255, 255, 0.5 );
+    background-color: #e0e0e0;
+    font-family: 'Arial', sans-serif;
+}
 
-    }
-    .Hurricane {
-        display: block;
-        position: fixed;
-        right: 100px;
-        top: 200px;
-        background: none;
-        border: none;
-        border-radius: 1em;
-        text-align: center;
-        font-family: sans-serif;
-        font-size: 150%;
-        padding: 20px;
-  }
+button {
+    display: block;
+    position: fixed;
+    right: 100px;
+    background: #4CAF50;
+    border: none;
+    border-radius: 1em;
+    text-align: center;
+    font-family: sans-serif;
+    font-size: 1.2rem;
+    padding: 15px 30px;
+    color: white;
+    transition: background 0.3s ease;
+}
 
-  .Hurricane:hover {
-        cursor: pointer;
-        border: solid 1px gray;
-        background: rgba( 255, 255, 255, 0.5 );
-    }
+button:hover {
+    cursor: pointer;
+    background: #45a049;
+}
 
-    .Earthquake {
-            display: block;
-            position: fixed;
-            right: 100px;
-            top: 300px;
-            background: none;
-            border: none;
-            border-radius: 1em;
-            text-align: center;
-            font-family: sans-serif;
-            font-size: 150%;
-            padding: 20px;
-      }
-    
-    .Earthquake:hover {
-        cursor: pointer;
-        border: solid 1px gray;
-        background: rgba( 255, 255, 255, 0.5 );
+.Pause {
+    top: 100px;
+}
 
-  }
+.Hurricane {
+    top: 200px;
+}
 
-    .Happyness{
-        position: fixed;
-        color: #d6dc16b1;
-        width: 300px;
-        height: 30px;
-        left: 70px;
-        top: 50px;
-        background: rgba(230, 238, 15, 0.5);
-        -webkit-transform-origin: 0 100%;
-        -webkit-transform: rotate(90deg);
-        -moz-transform-origin: 0 100%;
-        -moz-transform: rotate(90deg);
-        -ms-transform-origin: 0 100%;
-        -ms-transform: rotate(90deg);
-        transform-origin: 0 100%;
-        transform: rotate(90deg);    
-    }
-    .Happyness::-webkit-progress-bar {
-        height:30px;
-        width:100%;
-        margin:0 auto;
-        background-color:#000000;
-        border-radius:100px;
-    }
-    .Happyness::-webkit-progress-value {
-        display:inline-block;
-        float:left;
-        height:30px;
-        width: 100%;
-        margin:0px -10px 0 0;
-        padding-left:50px; /* Rounded corners requires a padding */
-        background:#ff9e2c;
-        border-radius:100px;
-    }
-    
-    .Happyness:after {
-        margin:-25px 0 0 -32px;
-        padding:0;
-        display:inline-block; /* Here is the magic to move with the progress */
-        float:left;
-        content: attr(value) '%';
-        color:#555;
-    }
-    
-    
+.Earthquake {
+    top: 300px;
+}
 
+.ResetHappiness {
+    top: 400px;
+}
 
+.Happyness {
+    position: fixed;
+    width: 300px;
+    height: 30px;
+    left: 70px;
+    top: 50px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 100px;
+    transform-origin: 0 100%;
+    transform: rotate(90deg);
+    overflow: hidden;
+    border: 2px solid black;
+}
 
+.Happyness::-webkit-progress-bar {
+    height: 30px;
+    background-color: #000;
+    border-radius: 100px;
+    overflow: hidden;
+}
 
-
-    
+.Happyness::-webkit-progress-value {
+    height: 100%;
+    background: linear-gradient(to right, black, #ff9e2c);
+    border-radius: 100px;
+    transition: width 0.5s ease-in-out;
+}
