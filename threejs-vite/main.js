@@ -30,7 +30,8 @@ const controls = new OrbitControls(camera, renderer.domElement);
 const earthGroup = new THREE.Group();
 const quakeGroup = new THREE.Group();
 const towerGroup = new THREE.Group();
-scene.add(earthGroup, quakeGroup, towerGroup);
+const hurricaneGroup = new THREE.Group();
+scene.add(earthGroup, quakeGroup, towerGroup, hurricaneGroup);
 
 let ship = null;
 let earth = null;
@@ -80,7 +81,7 @@ Menu.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
 Menu.style.padding = '5px';
 Menu.style.borderRadius = '5px';
 document.body.appendChild(Menu);
-Menu.textContent = `This is Menu :`;
+Menu.textContent = "";
 
 const HappyBar = document.getElementById("HAP");
 
@@ -144,13 +145,32 @@ earthLoader.load('./models/Earth.glb', (gltf) => {
   
   controls.update();
 
-  const shipLoader = new GLTFLoader();
-  shipLoader.load('./models/plane.glb', (gltf) => {
-    ship = gltf.scene;
-    ship.scale.set(0.1, 0.1, 0.1);
-    earthGroup.add(ship);
-    ship.position.copy(santosPosition);
-  });
+    const shipLoader = new GLTFLoader();
+    shipLoader.load(
+      './models/plane.glb',
+      (gltf) => {
+        console.log('Ship model loaded successfully');
+        ship = gltf.scene;
+        ship.scale.set(0.1, 0.1, 0.1); // Adjust scale as needed
+
+        const shipGeometry = new THREE.BoxGeometry(1, 1, 1);
+        const shipMaterial = new THREE.MeshBasicMaterial({ color: 0x00f00 });
+        const shipMesh = new THREE.Mesh(shipGeometry, shipMaterial);
+
+        ship.add(shipMesh);
+
+        earthGroup.add(ship);
+
+        // Position ship at the Santos port
+        ship.position.copy(santosPosition);
+      },
+      (xhr) => {
+        console.log((xhr.loaded / xhr.total) * 100 + '% ship loaded');
+      },
+      (error) => {
+        console.error('An error happened while loading the ship model', error);
+      }
+    );
 
   // Positions for Santos, Glasgow, and Tokyo
   const santosLat = -7, santosLon = 7;
@@ -219,10 +239,10 @@ function createTemporaryHurricane(position) {
     const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
     hurricane.quaternion.copy(quaternion);
 
-    earthGroup.add(hurricane);
+    hurricaneGroup.add(hurricane);
 
     setTimeout(() => {
-      earthGroup.remove(hurricane);
+      hurricaneGroup.remove(hurricane);
     }, 3000);
 
     changeHappy(-5);
@@ -257,6 +277,85 @@ function createTemporaryEarthquake(position) {
   }
 }
 
+function detectCollision(obj1, obj2){
+  var box1 = new THREE.Box3();
+  var box2 = new THREE.Box3();
+  if (!obj1 || !obj2) {
+    console.error('One of the objects is undefined:', { obj1, obj2 });
+    return false;
+  }
+
+  if (!obj1.geometry.boundingBox) {
+    obj1.geometry.computeBoundingBox();
+  }
+
+  obj2.traverse((child) => {
+    if (child.isMesh) {
+      if (!child.geometry.boundingBox) {
+        child.geometry.computeBoundingBox();
+      }
+      const childBox = child.geometry.boundingBox.clone().applyMatrix4(child.matrixWorld);
+      box2.union(childBox);
+    }
+  }); 
+
+  box1 = obj1.geometry.boundingBox.clone().applyMatrix4(obj1.matrixWorld);
+
+  return box1.intersectsBox(box2);
+}
+
+
+function reduceHealth(obj1, obj2){
+  if (detectCollision(obj1, obj2)){
+    changeHappy(-5);
+  }
+}
+
+function shakeEarth() {
+  quakeGroup.children.forEach(object => {
+    const xShake = Math.random() * 0.2 - 0.1;
+    const yShake = Math.random() * 0.2 - 0.1;
+    const zShake = Math.random() * 0.2 - 0.1;
+    object.position.set(object.position.x + xShake, object.position.y + yShake, object.position.z);
+  });
+}
+
+function onMouseClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(earthGroup.children, true);
+
+  if (intersects.length > 0) {
+    const clickedPoint = intersects[0].point;
+    const lat = 90 - Math.acos(clickedPoint.y / earthRadius) * 180 / Math.PI;
+    const lon = (Math.atan2(clickedPoint.x, -clickedPoint.z) * 180 / Math.PI + 180) % 360 - 180;
+    coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+    coordsDiv.style.display = 'block';
+
+    createTemporaryHurricane(clickedPoint);
+    createTemporaryEarthquake(clickedPoint);
+
+    towerGroup.children.forEach((Tower) => {
+      quakeGroup.children.forEach((earthquake) => {
+        reduceHealth(earthquake, Tower);
+      });
+    });
+
+    // Check for collision between the hurricane and ships
+    if (ship) {
+      hurricaneGroup.children.forEach((hurricane) => {
+        reduceHealth(hurricane, ship);});
+    } 
+
+  } else {
+    coordsDiv.style.display = 'none';
+  }
+}
+
+window.addEventListener('click', onMouseClick, false);
+
 function sphericalInterpolation(start, end, alpha) {
   const startVector = start.clone().normalize();
   const endVector = end.clone().normalize();
@@ -276,8 +375,20 @@ function animate() {
 
     ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
     const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed);
+
     ship.lookAt(earthGroup.position.clone().add(nextPosition));
     journeyProgress += speed;
+
+    // Get position of ship
+    const shipPosition = ship.position.clone();
+
+    // Calculate the normal vector at the ship's position
+    const shipNormal = shipPosition.clone().normalize();
+
+    // Align the ship to stand straight from the Earth
+    const up = new THREE.Vector3(0, 1, 0); // Assuming Y-axis is up
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, shipNormal);
+    ship.quaternion.copy(quaternion);
 
     if (journeyProgress >= 1) {
       currentTarget = (currentTarget + 1) % 3; 
