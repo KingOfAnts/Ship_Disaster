@@ -164,6 +164,13 @@ function createPort(position, color = 0x0000ff) {
   towerLoader.load('./models/tower.glb', (gltf) => {
     const Tower = gltf.scene;
     Tower.scale.set(0.5, 0.5, 0.5);
+    
+    // Make tower perpendicular to the surface
+    const direction = position.clone().normalize();
+    const up = new THREE.Vector3(0, 1, 0); // Assuming the tower's "up" is along Y-axis
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
+    Tower.quaternion.copy(quaternion);
+
     towerGroup.add(Tower);
     Tower.position.copy(position);
   });
