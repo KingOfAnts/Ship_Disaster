@@ -33,7 +33,8 @@ const controls = new OrbitControls(camera, renderer.domElement);
 const earthGroup = new THREE.Group();
 const quakeGroup = new THREE.Group();
 const towerGroup = new THREE.Group();
-scene.add(earthGroup, quakeGroup, towerGroup);
+const hurricaneGroup = new THREE.Group();
+scene.add(earthGroup, quakeGroup, towerGroup, hurricaneGroup);
 
 let ship = null;
 let earth = null;
@@ -170,6 +171,13 @@ earthLoader.load(
         console.log('Ship model loaded successfully');
         ship = gltf.scene;
         ship.scale.set(0.1, 0.1, 0.1); // Adjust scale as needed
+
+        const shipGeometry = new THREE.BoxGeometry(1, 1, 1);
+        const shipMaterial = new THREE.MeshBasicMaterial({ color: 0x00f00 });
+        const shipMesh = new THREE.Mesh(shipGeometry, shipMaterial);
+
+        ship.add(shipMesh);
+
         earthGroup.add(ship);
 
         // Position ship at the Santos port
@@ -281,11 +289,11 @@ function createTemporaryHurricane(position) {
     const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);  // Align Z-axis with the normal
     hurricane.quaternion.copy(quaternion);
 
-    earthGroup.add(hurricane);
+    hurricaneGroup.add(hurricane);
 
     // Remove the hurricane after 3 seconds
     setTimeout(() => {
-      earthGroup.remove(hurricane);
+      hurricaneGroup.remove(hurricane);
     }, 3000);
   }
 }
@@ -321,19 +329,19 @@ function createTemporaryEarthquake(position) {
   }
 }
 
-function detectCollision(object1, object2){
+function detectCollision(obj1, obj2){
   var box1 = new THREE.Box3();
   var box2 = new THREE.Box3();
-  if (!object1 || !object2) {
-    console.error('One of the objects is undefined:', { object1, object2 });
+  if (!obj1 || !obj2) {
+    console.error('One of the objects is undefined:', { obj1, obj2 });
     return false;
   }
 
-  if (!object1.geometry.boundingBox) {
-    object1.geometry.computeBoundingBox();
+  if (!obj1.geometry.boundingBox) {
+    obj1.geometry.computeBoundingBox();
   }
 
-  object2.traverse((child) => {
+  obj2.traverse((child) => {
     if (child.isMesh) {
       if (!child.geometry.boundingBox) {
         child.geometry.computeBoundingBox();
@@ -343,10 +351,11 @@ function detectCollision(object1, object2){
     }
   }); 
 
-  box1 = object1.geometry.boundingBox.clone().applyMatrix4(object1.matrixWorld);
+  box1 = obj1.geometry.boundingBox.clone().applyMatrix4(obj1.matrixWorld);
 
   return box1.intersectsBox(box2);
 }
+
 
 function reduceHealth(obj1, obj2){
   if (detectCollision(obj1, obj2)){
@@ -407,6 +416,12 @@ function onMouseClick(event) {
       quakeGroup.children.forEach((earthquake) => {
         reduceHealth(earthquake, Tower);});
     });
+
+    // Check for collision between the hurricane and ships
+    if (ship) {
+      hurricaneGroup.children.forEach((hurricane) => {
+        reduceHealth(hurricane, ship);});
+    } 
 
   } else {
     coordsDiv.style.display = 'none';
