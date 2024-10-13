@@ -99,6 +99,22 @@ Menu.style.borderRadius = '5px';
 document.body.appendChild(Menu);
 Menu.textContent = "";
 
+
+const Cargo = document.createElement('Img');
+Cargo.src = 'models/Earthquake.png';
+Cargo.style.position = 'absolute';
+Cargo.style.bottom = '10px';
+Cargo.style.left = '100px';
+Cargo.style.width = '100px'; // Adjust size as needed
+Cargo.style.height = '100px';
+Cargo.style.color = 'black';
+Cargo.style.padding = '5px';
+Cargo.style.borderRadius = '5px';
+
+//Cargo.tagName =null;
+document.body.appendChild(Cargo);
+
+
 const HappyBar = document.getElementById("HAP");
 
 function changeHappy(value) {
@@ -497,6 +513,22 @@ function trackShip() {
     camera.position.lerp(cameraPosition, 0.05);
     camera.lookAt(ship.position);
   }
+}
+
+function CalculateHappy(cargoType){
+  Happy = 0
+  if (cargoType == "Fish"){
+    Happy +=0;
+  }else if (cargoType == "") {
+    Happy +=0;
+  }else if (cargoType == "") {
+    Happy +=0;
+  }else if (cargoType == "") {
+  } else {
+    
+  }
+
+  return Happy
 }
 
 function animate() {
