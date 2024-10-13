@@ -36,10 +36,10 @@ let ship = null;
 let earth = null;
 let earthRadius = 0;
 
-let santosPosition, glasgowPosition;
-let direction = 1;
-const speed = 0.005;
+let santosPosition, glasgowPosition, tokyoPosition; 
 let journeyProgress = 0;
+let currentTarget = 0; 
+const speed = 0.005;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -152,15 +152,18 @@ earthLoader.load('./models/Earth.glb', (gltf) => {
     ship.position.copy(santosPosition);
   });
 
-  const santosLat = -7;
-  const santosLon = 7;
-  santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
-  createPort(santosPosition, 0x0000ff);
+  // Positions for Santos, Glasgow, and Tokyo
+  const santosLat = -7, santosLon = 7;
+  const glasgowLat = 48, glasgowLon = 65;
+  const tokyoLat = 35, tokyoLon = 139;
 
-  const glasgowLat = 48;
-  const glasgowLon = 65;
+  santosPosition = latLonToPosition(santosLat, santosLon, earthRadius);
   glasgowPosition = latLonToPosition(glasgowLat, glasgowLon, earthRadius);
+  tokyoPosition = latLonToPosition(tokyoLat, tokyoLon, earthRadius);
+
+  createPort(santosPosition, 0x0000ff);
   createPort(glasgowPosition, 0xff0000);
+  createPort(tokyoPosition, 0x00ff00);
 });
 
 function latLonToPosition(lat, lon, radius) {
@@ -254,56 +257,6 @@ function createTemporaryEarthquake(position) {
   }
 }
 
-function detectCollision(object1, object2) {
-  const box1 = new THREE.Box3().setFromObject(object1);
-  const box2 = new THREE.Box3().setFromObject(object2);
-  return box1.intersectsBox(box2);
-}
-
-function reduceHealth(obj1, obj2) {
-  if (detectCollision(obj1, obj2)) {
-    changeHappy(-5);
-  }
-}
-
-function shakeEarth() {
-  quakeGroup.children.forEach(object => {
-    const xShake = Math.random() * 0.2 - 0.1;
-    const yShake = Math.random() * 0.2 - 0.1;
-    const zShake = Math.random() * 0.2 - 0.1;
-    object.position.set(object.position.x + xShake, object.position.y + yShake, object.position.z);
-  });
-}
-
-function onMouseClick(event) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-
-  const intersects = raycaster.intersectObjects(earthGroup.children, true);
-
-  if (intersects.length > 0) {
-    const clickedPoint = intersects[0].point;
-    const lat = 90 - Math.acos(clickedPoint.y / earthRadius) * 180 / Math.PI;
-    const lon = (Math.atan2(clickedPoint.x, -clickedPoint.z) * 180 / Math.PI + 180) % 360 - 180;
-    coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
-    coordsDiv.style.display = 'block';
-
-    createTemporaryHurricane(clickedPoint);
-    createTemporaryEarthquake(clickedPoint);
-
-    towerGroup.children.forEach((Tower) => {
-      quakeGroup.children.forEach((earthquake) => {
-        reduceHealth(earthquake, Tower);
-      });
-    });
-  } else {
-    coordsDiv.style.display = 'none';
-  }
-}
-
-window.addEventListener('click', onMouseClick, false);
-
 function sphericalInterpolation(start, end, alpha) {
   const startVector = start.clone().normalize();
   const endVector = end.clone().normalize();
@@ -317,25 +270,21 @@ function animate() {
   requestAnimationFrame(animate);
 
   if (PawsOn == 0 && ship) {
-    const start = santosPosition;
-    const end = glasgowPosition;
+    const targets = [santosPosition, glasgowPosition, tokyoPosition]; 
+    const start = targets[currentTarget];
+    const end = targets[(currentTarget + 1) % 3]; 
+
     ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
     const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed);
     ship.lookAt(earthGroup.position.clone().add(nextPosition));
     journeyProgress += speed;
 
     if (journeyProgress >= 1) {
-      direction *= -1;
-      journeyProgress = 0;
-      [santosPosition, glasgowPosition] = [glasgowPosition, santosPosition];
+      currentTarget = (currentTarget + 1) % 3; 
+      journeyProgress = 0; 
     }
   }
 
-  if (quakeGroup) {
-    shakeEarth();
-  }
-
-  // Display camera position
   cameraDiv.textContent = `Camera Position: X=${camera.position.x.toFixed(2)}, Y=${camera.position.y.toFixed(2)}, Z=${camera.position.z.toFixed(2)}`;
 
   controls.update();
