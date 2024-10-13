@@ -77,6 +77,17 @@ Menu.style.borderRadius = '5px';
 document.body.appendChild(Menu);
 Menu.textContent = `This is Menu :`;
 Menu.style.display = 'block';
+//-------------------------------------------------------Happy bar ---------------------------------
+
+
+var HappyBar = document.getElementById("HAP")
+  
+
+function changeHappy(Value){
+  console.log(HappyBar.value);
+  HappyBar.value += Value;
+
+}
 //-------------------------------------------------------Buttons---------------------------------//
 
 const PauseBtn = document.getElementById("PAW");
@@ -314,6 +325,9 @@ function shakeEarth() {
     });
 }
 // -----------------------------------------------------------------------------------------------------------------------
+
+
+
 
 // Handle mouse click
 function onMouseClick(event) {
