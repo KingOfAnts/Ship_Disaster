@@ -360,8 +360,6 @@ function onMouseClick(event) {
     const clickedPoint = intersects[0].point;
     const lat = 90 - Math.acos(clickedPoint.y / earthRadius) * 180 / Math.PI;
     const lon = (Math.atan2(clickedPoint.x, -clickedPoint.z) * 180 / Math.PI + 180) % 360 - 180;
-    coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
-    coordsDiv.style.display = 'block';
 
     createTemporaryHurricane(clickedPoint);
     createTemporaryEarthquake(clickedPoint);
@@ -375,9 +373,7 @@ function onMouseClick(event) {
     // Check for collision between the hurricane and ships
     hurricaneReduceHealth(3);
 
-  } else {
-    coordsDiv.style.display = 'none';
-  }
+  } 
 }
 
 window.addEventListener('click', onMouseClick, false);
@@ -506,14 +502,13 @@ function animate() {
 
     // Calculate the normal vector at the ship's position (pointing outward from Earth's center)
     const normal = currentPosition.clone().normalize();
-
-    // Calculate the right vector
     const right = new THREE.Vector3().crossVectors(direction, normal).normalize();
+
+    // adds offset to the height of the plane
+    ship.position.addScaledVector(normal, 1);
 
     // Recalculate the up vector to ensure it's perpendicular to both direction and right
     const up = new THREE.Vector3().crossVectors(right, direction).normalize();
-
-    // Create a rotation matrix
     const rotationMatrix = new THREE.Matrix4().makeBasis(right, up, direction.negate());
 
     // Apply the rotation to the ship
@@ -533,7 +528,6 @@ function animate() {
   }
 
   trackShip();
-  cameraDiv.textContent = `Camera Position: X=${camera.position.x.toFixed(2)}, Y=${camera.position.y.toFixed(2)}, Z=${camera.position.z.toFixed(2)}`;
   controls.update();
   renderer.render(scene, camera);
 }
