@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xdddddd);
+scene.background = new THREE.Color(0xffffff); // Set background to white
 
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
 camera.position.z = 5;
@@ -49,10 +49,10 @@ const coordsDiv = document.createElement('div');
 coordsDiv.style.position = 'absolute';
 coordsDiv.style.top = '10px';
 coordsDiv.style.left = '10px';
-coordsDiv.style.color = 'white';
+coordsDiv.style.color = 'black'; // Black text for visibility against white background
 coordsDiv.style.fontSize = '14px';
 coordsDiv.style.fontFamily = 'Arial, sans-serif';
-coordsDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+coordsDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
 coordsDiv.style.padding = '5px';
 coordsDiv.style.borderRadius = '5px';
 document.body.appendChild(coordsDiv);
@@ -61,10 +61,10 @@ const cameraDiv = document.createElement('div');
 cameraDiv.style.position = 'absolute';
 cameraDiv.style.top = '50px';
 cameraDiv.style.left = '10px';
-cameraDiv.style.color = 'white';
+cameraDiv.style.color = 'black'; // Black text for visibility
 cameraDiv.style.fontSize = '14px';
 cameraDiv.style.fontFamily = 'Arial, sans-serif';
-cameraDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+cameraDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
 cameraDiv.style.padding = '5px';
 cameraDiv.style.borderRadius = '5px';
 document.body.appendChild(cameraDiv);
@@ -73,10 +73,10 @@ const Menu = document.createElement('Menu');
 Menu.style.position = 'absolute';
 Menu.style.top = '10px';
 Menu.style.right = '100px';
-Menu.style.color = 'white';
+Menu.style.color = 'black';
 Menu.style.fontSize = '14px';
 Menu.style.fontFamily = 'Arial, sans-serif';
-Menu.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+Menu.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
 Menu.style.padding = '5px';
 Menu.style.borderRadius = '5px';
 document.body.appendChild(Menu);
@@ -86,7 +86,6 @@ const HappyBar = document.getElementById("HAP");
 
 function changeHappy(value) {
   HappyBar.value = Math.max(0, Math.min(100, HappyBar.value + value));
-  
   const percentage = HappyBar.value;
   const color = `linear-gradient(to right, black ${100 - percentage}%, #ff9e2c ${percentage}%)`;
   HappyBar.style.background = color;
@@ -97,7 +96,7 @@ PauseBtn.addEventListener("click", togglePause, false);
 let PawsOn = 0;
 
 function togglePause() {
-  PawsOn = 1 - PawsOn; 
+  PawsOn = 1 - PawsOn;
   Menu.textContent = PawsOn ? "This is Menu: Paused" : "This is Menu:";
 }
 
@@ -162,11 +161,9 @@ earthLoader.load('./models/Earth.glb', (gltf) => {
 function latLonToPosition(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
-
   const x = -radius * Math.sin(phi) * Math.cos(theta);
   const y = radius * Math.cos(phi);
   const z = radius * Math.sin(phi) * Math.sin(theta);
-
   return new THREE.Vector3(x, y, z);
 }
 
@@ -175,12 +172,10 @@ function createPort(position, color = 0x0000ff) {
   towerLoader.load('./models/tower.glb', (gltf) => {
     const Tower = gltf.scene;
     Tower.scale.set(0.5, 0.5, 0.5);
-    
     const direction = position.clone().normalize();
     const up = new THREE.Vector3(0, 1, 0);
     const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
     Tower.quaternion.copy(quaternion);
-
     towerGroup.add(Tower);
     Tower.position.copy(position);
   });
@@ -202,22 +197,17 @@ function createTemporaryHurricane(position) {
     const geometry = new THREE.PlaneGeometry(hurricaneSize, hurricaneSize);
     const material = new THREE.MeshBasicMaterial({ map: hurricaneTexture, transparent: true });
     const hurricane = new THREE.Mesh(geometry, material);
-
     const offset = 0.25;
     const direction = position.clone().normalize();
     const raisedPosition = position.clone().addScaledVector(direction, offset);
     hurricane.position.copy(raisedPosition);
-
     const up = new THREE.Vector3(0, 0, 1);
     const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
     hurricane.quaternion.copy(quaternion);
-
     earthGroup.add(hurricane);
-
     setTimeout(() => {
       earthGroup.remove(hurricane);
     }, 3000);
-
     changeHappy(-5);
   }
 }
@@ -228,24 +218,19 @@ function createTemporaryEarthquake(position) {
     const geometry = new THREE.PlaneGeometry(earthquakeSize, earthquakeSize);
     const material = new THREE.MeshBasicMaterial({ map: earthquakeTexture, transparent: true });
     const earthquake = new THREE.Mesh(geometry, material);
-
     const offset = 0.25;
     const direction = position.clone().normalize();
     const raisedPosition = position.clone().addScaledVector(direction, offset);
     earthquake.position.copy(raisedPosition);
-
     const up = new THREE.Vector3(0, 0, 1);
     const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
     earthquake.quaternion.copy(quaternion);
-
     earthGroup.add(earthquake);
     quakeGroup.add(earthquake);
-
     setTimeout(() => {
       earthGroup.remove(earthquake);
       quakeGroup.remove(earthquake);
     }, 3000);
-
     changeHappy(-5);
   }
 }
@@ -277,17 +262,14 @@ function onMouseClick(event) {
   raycaster.setFromCamera(mouse, camera);
 
   const intersects = raycaster.intersectObjects(earthGroup.children, true);
-
   if (intersects.length > 0) {
     const clickedPoint = intersects[0].point;
     const lat = 90 - Math.acos(clickedPoint.y / earthRadius) * 180 / Math.PI;
     const lon = (Math.atan2(clickedPoint.x, -clickedPoint.z) * 180 / Math.PI + 180) % 360 - 180;
     coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
     coordsDiv.style.display = 'block';
-
     createTemporaryHurricane(clickedPoint);
     createTemporaryEarthquake(clickedPoint);
-
     towerGroup.children.forEach((Tower) => {
       quakeGroup.children.forEach((earthquake) => {
         reduceHealth(earthquake, Tower);
@@ -309,26 +291,67 @@ function sphericalInterpolation(start, end, alpha) {
   return startVector.clone().multiplyScalar(Math.cos(theta)).add(relativeVector.multiplyScalar(Math.sin(theta))).normalize().multiplyScalar(earthRadius);
 }
 
+// Particle system for ship trail
+const maxParticles = 200;
+let particleIndex = 0;
+const trailGeometry = new THREE.BufferGeometry();
+const positions = new Float32Array(maxParticles * 3);
+const alphas = new Float32Array(maxParticles);
+const particleLifetimes = new Float32Array(maxParticles).fill(0);
+
+trailGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+trailGeometry.setAttribute('alpha', new THREE.BufferAttribute(alphas, 1));
+
+const trailMaterial = new THREE.PointsMaterial({
+  size: 0.1,
+  transparent: true,
+  opacity: 1.0,
+  depthWrite: false,
+  blending: THREE.NormalBlending, // Use normal blending mode instead of additive
+  color: 0x000000 // Set the color to black
+});
+
+const trailParticles = new THREE.Points(trailGeometry, trailMaterial);
+scene.add(trailParticles);
+
+function updateTrail() {
+  if (ship) {
+    positions[particleIndex * 3] = ship.position.x;
+    positions[particleIndex * 3 + 1] = ship.position.y;
+    positions[particleIndex * 3 + 2] = ship.position.z;
+    alphas[particleIndex] = 1.0;
+    particleIndex = (particleIndex + 1) % maxParticles;
+    for (let i = 0; i < maxParticles; i++) {
+      if (particleLifetimes[i] > 0) {
+        alphas[i] -= 0.02;
+        particleLifetimes[i] -= 1;
+      } else {
+        alphas[i] = 0;
+      }
+    }
+    trailGeometry.attributes.position.needsUpdate = true;
+    trailGeometry.attributes.alpha.needsUpdate = true;
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
 
   if (PawsOn == 0 && ship && towerPositions.length > 1) {
     const start = towerPositions[currentTarget];
     const end = towerPositions[(currentTarget + 1) % towerPositions.length];
-
     ship.position.copy(sphericalInterpolation(start, end, journeyProgress));
     const nextPosition = sphericalInterpolation(start, end, journeyProgress + speed);
     ship.lookAt(earthGroup.position.clone().add(nextPosition));
     journeyProgress += speed;
-
     if (journeyProgress >= 1) {
       currentTarget = (currentTarget + 1) % towerPositions.length;
       journeyProgress = 0;
     }
+    updateTrail();
   }
 
   cameraDiv.textContent = `Camera Position: X=${camera.position.x.toFixed(2)}, Y=${camera.position.y.toFixed(2)}, Z=${camera.position.z.toFixed(2)}`;
-
   controls.update();
   renderer.render(scene, camera);
 }
