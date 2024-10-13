@@ -416,7 +416,7 @@ function sphericalInterpolation(start, end, alpha) {
   return startVector.clone().multiplyScalar(Math.cos(theta)).add(relativeVector.multiplyScalar(Math.sin(theta))).normalize().multiplyScalar(earthRadius);
 }
 
-const maxParticles = 200;
+const maxParticles = 50;
 let particleIndex = 0;
 const trailGeometry = new THREE.BufferGeometry();
 const positions = new Float32Array(maxParticles * 3);
