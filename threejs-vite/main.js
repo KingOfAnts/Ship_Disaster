@@ -128,6 +128,40 @@ function resetHappiness() {
   HappyBar.value = 100;
 }
 
+const happyBarContainer = document.createElement('div');
+happyBarContainer.style.position = 'absolute';
+happyBarContainer.style.top = '350px';
+happyBarContainer.style.left = '25px'; 
+happyBarContainer.style.display = 'flex'; 
+happyBarContainer.style.alignItems = 'center';
+document.body.appendChild(happyBarContainer);
+
+// Happy Face Image
+const happyImg = document.createElement('img');
+happyImg.src = 'models/happy.png';
+happyImg.style.width = '30px'; // Adjust size as needed
+happyImg.style.height = '30px';
+happyBarContainer.appendChild(happyImg);
+
+// Happiness Bar
+happyBarContainer.appendChild(HappyBar); 
+
+const sadBarContainer = document.createElement('div')
+sadBarContainer.style.position = 'absolute'
+sadBarContainer.style.top = '80px'
+sadBarContainer.style.left = '25px'
+sadBarContainer.style.display = 'flex'
+sadBarContainer.style.alignItems = 'center'
+document.body.appendChild(sadBarContainer)
+
+
+// Sad Face Image
+const sadImg = document.createElement('img');
+sadImg.src = 'models/sad.png';
+sadImg.style.width = '30px'; // Adjust size as needed
+sadImg.style.height = '30px';
+sadBarContainer.appendChild(sadImg);
+
 const earthLoader = new GLTFLoader();
 earthLoader.load('./models/Earth.glb', (gltf) => {
   earth = gltf.scene;
