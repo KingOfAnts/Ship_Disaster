@@ -244,8 +244,6 @@ function createTemporaryHurricane(position) {
     setTimeout(() => {
       hurricaneGroup.remove(hurricane);
     }, 3000);
-
-    changeHappy(-5);
   }
 }
 
@@ -272,8 +270,6 @@ function createTemporaryEarthquake(position) {
       earthGroup.remove(earthquake);
       quakeGroup.remove(earthquake);
     }, 3000);
-
-    changeHappy(-5);
   }
 }
 
@@ -394,6 +390,10 @@ function animate() {
       currentTarget = (currentTarget + 1) % 3; 
       journeyProgress = 0; 
     }
+
+    quakeGroup.children.forEach((earthquake) => {
+      shakeEarth();
+    });
   }
 
   cameraDiv.textContent = `Camera Position: X=${camera.position.x.toFixed(2)}, Y=${camera.position.y.toFixed(2)}, Z=${camera.position.z.toFixed(2)}`;
