@@ -3,9 +3,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff); // Set background to white
+scene.background = new THREE.Color(0xffffff);
 
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
 camera.position.x = 5;
 camera.position.y = 5;
@@ -41,6 +41,8 @@ let direction = 1;
 const speed = 0.005;
 let journeyProgress = 0;
 let currentTarget = 0;
+let isUserInteracting = false;
+let trackingTimeout = null;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -49,7 +51,7 @@ const coordsDiv = document.createElement('div');
 coordsDiv.style.position = 'absolute';
 coordsDiv.style.top = '10px';
 coordsDiv.style.left = '10px';
-coordsDiv.style.color = 'black'; // Black text for visibility against white background
+coordsDiv.style.color = 'black';
 coordsDiv.style.fontSize = '14px';
 coordsDiv.style.fontFamily = 'Arial, sans-serif';
 coordsDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
@@ -61,7 +63,7 @@ const cameraDiv = document.createElement('div');
 cameraDiv.style.position = 'absolute';
 cameraDiv.style.top = '50px';
 cameraDiv.style.left = '10px';
-cameraDiv.style.color = 'black'; // Black text for visibility
+cameraDiv.style.color = 'black';
 cameraDiv.style.fontSize = '14px';
 cameraDiv.style.fontFamily = 'Arial, sans-serif';
 cameraDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
@@ -291,7 +293,6 @@ function sphericalInterpolation(start, end, alpha) {
   return startVector.clone().multiplyScalar(Math.cos(theta)).add(relativeVector.multiplyScalar(Math.sin(theta))).normalize().multiplyScalar(earthRadius);
 }
 
-// Particle system for ship trail
 const maxParticles = 200;
 let particleIndex = 0;
 const trailGeometry = new THREE.BufferGeometry();
@@ -307,8 +308,8 @@ const trailMaterial = new THREE.PointsMaterial({
   transparent: true,
   opacity: 1.0,
   depthWrite: false,
-  blending: THREE.NormalBlending, // Use normal blending mode instead of additive
-  color: 0x000000 // Set the color to black
+  blending: THREE.NormalBlending,
+  color: 0x000000
 });
 
 const trailParticles = new THREE.Points(trailGeometry, trailMaterial);
@@ -334,6 +335,63 @@ function updateTrail() {
   }
 }
 
+const flightTimeDiv = document.createElement('div');
+flightTimeDiv.style.position = 'absolute';
+flightTimeDiv.style.bottom = '10px';
+flightTimeDiv.style.left = '10px';
+flightTimeDiv.style.color = 'black';
+flightTimeDiv.style.fontSize = '16px';
+flightTimeDiv.style.fontFamily = 'Arial, sans-serif';
+flightTimeDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+flightTimeDiv.style.padding = '10px';
+flightTimeDiv.style.borderRadius = '5px';
+flightTimeDiv.style.opacity = '0';
+flightTimeDiv.style.transition = 'opacity 1s ease';
+document.body.appendChild(flightTimeDiv);
+
+function calculateDistance(start, end) {
+  const R = 6371;
+  const lat1 = start.y / earthRadius * (180 / Math.PI);
+  const lon1 = start.z / earthRadius * (180 / Math.PI);
+  const lat2 = end.y / earthRadius * (180 / Math.PI);
+  const lon2 = end.z / earthRadius * (180 / Math.PI);
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+  return distance;
+}
+
+function calculateFlightTime(distance) {
+  const averageSpeed = 900;
+  return distance / averageSpeed;
+}
+
+function getAbbreviation(index) {
+  const abbreviations = ['LON', 'NYC', 'PAR', 'TOK', 'SYD', 'MUM'];
+  return abbreviations[index % abbreviations.length];
+}
+
+function displayFlightTime(flightTime, startAbbreviation, endAbbreviation) {
+  flightTimeDiv.textContent = `Flight: ${startAbbreviation} -> ${endAbbreviation}, Time: ${flightTime.toFixed(2)} hours`;
+  flightTimeDiv.style.opacity = '1';
+
+  setTimeout(() => {
+    flightTimeDiv.style.opacity = '0';
+  }, 3000);
+}
+
+function trackShip() {
+  if (!isUserInteracting && ship) {
+    const offsetDistance = earthRadius * 2; 
+    const shipToCenter = new THREE.Vector3().subVectors(ship.position, earth.position).normalize(); // Direction from Earth center to ship
+    const cameraPosition = shipToCenter.multiplyScalar(offsetDistance).add(ship.position); // Perpendicular position
+    camera.position.lerp(cameraPosition, 0.05);
+    camera.lookAt(ship.position);
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
 
@@ -347,13 +405,31 @@ function animate() {
     if (journeyProgress >= 1) {
       currentTarget = (currentTarget + 1) % towerPositions.length;
       journeyProgress = 0;
+
+      const distance = calculateDistance(start, end);
+      const flightTime = calculateFlightTime(distance);
+      const startAbbreviation = getAbbreviation(currentTarget);
+      const endAbbreviation = getAbbreviation((currentTarget + 1) % towerPositions.length);
+      displayFlightTime(flightTime, startAbbreviation, endAbbreviation);
     }
     updateTrail();
   }
 
+  trackShip();
   cameraDiv.textContent = `Camera Position: X=${camera.position.x.toFixed(2)}, Y=${camera.position.y.toFixed(2)}, Z=${camera.position.z.toFixed(2)}`;
   controls.update();
   renderer.render(scene, camera);
 }
+
+controls.addEventListener('start', () => {
+  isUserInteracting = true;
+  clearTimeout(trackingTimeout);
+});
+
+controls.addEventListener('end', () => {
+  trackingTimeout = setTimeout(() => {
+    isUserInteracting = false;
+  }, 3000);
+});
 
 animate();
