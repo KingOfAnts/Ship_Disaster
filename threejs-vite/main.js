@@ -100,19 +100,19 @@ document.body.appendChild(Menu);
 Menu.textContent = "";
 
 
-const Cargo = document.createElement('Img');
-Cargo.src = 'models/Earthquake.png';
-Cargo.style.position = 'absolute';
-Cargo.style.bottom = '10px';
-Cargo.style.left = '100px';
-Cargo.style.width = '100px'; // Adjust size as needed
-Cargo.style.height = '100px';
-Cargo.style.color = 'black';
-Cargo.style.padding = '5px';
-Cargo.style.borderRadius = '5px';
+// const Cargo = document.createElement('Img');
+// Cargo.src = 'models/Earthquake.png';
+// Cargo.style.position = 'absolute';
+// Cargo.style.bottom = '10px';
+// Cargo.style.left = '100px';
+// Cargo.style.width = '100px'; // Adjust size as needed
+// Cargo.style.height = '100px';
+// Cargo.style.color = 'black';
+// Cargo.style.padding = '5px';
+// Cargo.style.borderRadius = '5px';
 
-//Cargo.tagName =null;
-document.body.appendChild(Cargo);
+// //Cargo.tagName =null;
+// document.body.appendChild(Cargo);
 
 
 const HappyBar = document.getElementById("HAP");
@@ -130,7 +130,7 @@ let PawsOn = 0;
 
 function togglePause() {
   PawsOn = 1 - PawsOn;
-  Menu.textContent = PawsOn ? "This is Menu: Paused" : "This is Menu:";
+  // Menu.textContent = PawsOn ? "This is Menu: Paused" : "This is Menu:";
 }
 
 const HurricaneBtn = document.getElementById("HUR");
@@ -416,7 +416,7 @@ function sphericalInterpolation(start, end, alpha) {
   return startVector.clone().multiplyScalar(Math.cos(theta)).add(relativeVector.multiplyScalar(Math.sin(theta))).normalize().multiplyScalar(earthRadius);
 }
 
-const maxParticles = 50;
+const maxParticles = 200;
 let particleIndex = 0;
 const trailGeometry = new THREE.BufferGeometry();
 const positions = new Float32Array(maxParticles * 3);
