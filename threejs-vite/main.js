@@ -15,7 +15,7 @@ document.body.appendChild(renderer.domElement);
 const ambientLight = new THREE.AmbientLight(0xffffff, 2);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 4);
 directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
 
@@ -384,6 +384,8 @@ function animate() {
     ship.quaternion.copy(quaternion);
 
     if (journeyProgress >= 1) {
+      HappyBar.value = HappyBar.value + 5;
+      console.log(HappyBar.value);
       direction *= -1;
       journeyProgress = 0;
       [santosPosition, glasgowPosition] = [glasgowPosition, santosPosition];
