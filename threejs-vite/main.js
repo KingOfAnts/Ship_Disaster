@@ -317,9 +317,28 @@ function detectCollision(obj1, obj2){
 
 function reduceHealth(obj1, obj2){
   if (detectCollision(obj1, obj2)){
-    changeHappy(-5);
+    changeHappy(-3);
   }
 }
+
+function hurricaneReduceHealth(durationInSeconds) {
+  const interval = 500; // Interval in milliseconds
+  const duration = durationInSeconds * 1000; // Convert seconds to milliseconds
+
+  const intervalId = setInterval(() => {
+    if (ship) {
+      hurricaneGroup.children.forEach((hurricane) => {
+        reduceHealth(hurricane, ship);
+      });
+    }
+  }, interval);
+
+  setTimeout(() => {
+    clearInterval(intervalId); // Stop the loop
+    console.log('Execution stopped');
+  }, duration);
+}
+
 
 function shakeEarth() {
   quakeGroup.children.forEach(object => {
@@ -354,10 +373,7 @@ function onMouseClick(event) {
     });
 
     // Check for collision between the hurricane and ships
-    if (ship) {
-      hurricaneGroup.children.forEach((hurricane) => {
-        reduceHealth(hurricane, ship);});
-    } 
+    hurricaneReduceHealth(3);
 
   } else {
     coordsDiv.style.display = 'none';
