@@ -310,7 +310,7 @@ function shakeEarth() {
     const zShake = Math.random() * 0.2 - 0.1;
 
     // Apply the shake to the object's position
-    object.position.set(object.position.x + xShake, object.position.y + yShake, object.position.z + zShake);
+    object.position.set(object.position.x + xShake, object.position.y + yShake, object.position.z);
     });
 }
 // -----------------------------------------------------------------------------------------------------------------------
