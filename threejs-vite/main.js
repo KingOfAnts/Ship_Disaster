@@ -629,9 +629,15 @@ function animate() {
         cargoImg.alt = `${cargo}`;
         cargoImg.style.display = 'block';
       }
+      if (cargo == "oil"){
+        cargoImg.src = `models/oil.png`;
+        cargoImg.alt = `${cargo}`;
+        cargoImg.style.display = 'block';
+      }
     }
     updateTrail();
     quakeGroup.children.forEach((earthquake) => {
+      HappyBar.value += 10;
       shakeEarth();
     });
   }
