@@ -102,6 +102,7 @@ document.body.appendChild(Menu);
 Menu.textContent = "";
 
 
+
 const Cargo = document.createElement('Img');
 Cargo.src = 'models/treasure_chest.png';
 Cargo.style.position = 'absolute';
@@ -148,7 +149,7 @@ let PawsOn = 0;
 
 function togglePause() {
   PawsOn = 1 - PawsOn;
-  Menu.textContent = PawsOn ? "This is Menu: Paused" : "This is Menu:";
+  // Menu.textContent = PawsOn ? "This is Menu: Paused" : "This is Menu:";
 }
 
 const HurricaneBtn = document.getElementById("HUR");
@@ -452,7 +453,7 @@ function sphericalInterpolation(start, end, alpha) {
   return startVector.clone().multiplyScalar(Math.cos(theta)).add(relativeVector.multiplyScalar(Math.sin(theta))).normalize().multiplyScalar(earthRadius);
 }
 
-const maxParticles = 200;
+const maxParticles = 50;
 let particleIndex = 0;
 const trailGeometry = new THREE.BufferGeometry();
 const positions = new Float32Array(maxParticles * 3);
@@ -474,21 +475,33 @@ const trailMaterial = new THREE.PointsMaterial({
 const trailParticles = new THREE.Points(trailGeometry, trailMaterial);
 scene.add(trailParticles);
 
+let lastParticlePosition = new THREE.Vector3();
+const minDistanceBetweenParticles = 0.2; // Adjust this value to control the spacing between particles
+
 function updateTrail() {
   if (ship) {
-    positions[particleIndex * 3] = ship.position.x;
-    positions[particleIndex * 3 + 1] = ship.position.y;
-    positions[particleIndex * 3 + 2] = ship.position.z;
-    alphas[particleIndex] = 1.0;
-    particleIndex = (particleIndex + 1) % maxParticles;
+    const currentPosition = ship.position.clone();
+    const distanceFromLast = currentPosition.distanceTo(lastParticlePosition);
+
+    if (distanceFromLast >= minDistanceBetweenParticles) {
+      positions[particleIndex * 3] = currentPosition.x;
+      positions[particleIndex * 3 + 1] = currentPosition.y;
+      positions[particleIndex * 3 + 2] = currentPosition.z;
+      alphas[particleIndex] = 1.0;
+      particleLifetimes[particleIndex] = 100; // Set a lifetime for the particle
+      particleIndex = (particleIndex + 1) % maxParticles;
+      lastParticlePosition.copy(currentPosition);
+    }
+
     for (let i = 0; i < maxParticles; i++) {
       if (particleLifetimes[i] > 0) {
-        alphas[i] -= 0.02;
+        alphas[i] -= 0.01; // Gradually reduce alpha
         particleLifetimes[i] -= 1;
       } else {
         alphas[i] = 0;
       }
     }
+
     trailGeometry.attributes.position.needsUpdate = true;
     trailGeometry.attributes.alpha.needsUpdate = true;
   }
