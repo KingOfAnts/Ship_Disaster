@@ -5,19 +5,38 @@ body {
     font-family: 'Arial', sans-serif;
 }
 
+.sidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 250px;
+    height: 100%;
+    background: transparent;
+    transition: transform 0.3s ease;
+    transform: translateX(100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px;
+}
+
+.sidebar.open {
+    transform: translateX(0);
+}
+
 button {
     display: block;
-    position: fixed;
-    right: 100px;
     background: #4CAF50;
     border: none;
     border-radius: 1em;
     text-align: center;
     font-family: sans-serif;
-    font-size: 1.2rem;
-    padding: 15px 30px;
+    font-size: 0.8rem;
+    padding: 10px 20px;
     color: white;
     transition: background 0.3s ease;
+    margin-bottom: 10px;
 }
 
 button:hover {
@@ -25,20 +44,27 @@ button:hover {
     background: #45a049;
 }
 
-.Pause {
-    top: 100px;
+.toggle-sidebar {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    box-shadow: none;
 }
 
-.Hurricane {
-    top: 200px;
-}
-
-.Earthquake {
-    top: 300px;
-}
-
-.ResetHappiness {
-    top: 400px;
+.toggle-sidebar:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .Happyness {

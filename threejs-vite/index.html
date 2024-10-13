@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="Hud.css">
@@ -9,15 +9,28 @@
       body { margin: 0; }
       canvas { display: block; }
     </style>
-  </head>
-  <body>
-    <button id="PAW" class="Pause">Pause</button>
-    <button id="HUR" class="Hurricane">Hurricane</button>
-    <button id="EAR" class="Earthquake">Earthquake</button>
-    <button id="RESET" class="ResetHappiness">Reset Happiness</button>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button id="PAW" class="Pause">Pause</button>
+        <button id="HUR" class="Hurricane">Hurricane</button>
+        <button id="EAR" class="Earthquake">Earthquake</button>
+        <button id="RESET" class="ResetHappiness">Reset Happiness</button>
+    </div>
+
+    <button class="toggle-sidebar" id="toggleSidebar">&#9776;</button>
     <progress id="HAP" class="Happyness" value=100 max=100></progress>
     
     <div id="app"></div>
     <script type="module" src="/main.js"></script>
-  </body>
+    
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggleSidebar');
+
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+    </script>
+</body>
 </html>
