@@ -3,7 +3,12 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff);
+
+// Load the new background image
+const textureLoader = new THREE.TextureLoader();
+const backgroundTexture = textureLoader.load('./models/background.jpg', () => {
+  scene.background = backgroundTexture;
+});
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
@@ -17,13 +22,22 @@ document.body.appendChild(renderer.domElement);
 const ambientLight = new THREE.AmbientLight(0xffffff, 2);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+const ambientLight2 = new THREE.AmbientLight(0xffAA55, 3);
+scene.add(ambientLight2);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 4);
 directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
 
 const pointLight = new THREE.PointLight(0xffffff, 1, 100);
 pointLight.position.set(0, 5, 0);
 scene.add(pointLight);
+
+
+const yellowLight = new THREE.DirectionalLight(0xffffff, 2);
+yellowLight.position.set(-1, -1, -1); 
+scene.add(yellowLight);
+
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
@@ -89,10 +103,10 @@ Menu.textContent = "";
 
 
 const Cargo = document.createElement('Img');
-Cargo.src = 'models/Earthquake.png';
+Cargo.src = 'models/treasure_chest.png';
 Cargo.style.position = 'absolute';
 Cargo.style.bottom = '10px';
-Cargo.style.left = '100px';
+Cargo.style.left = '10px';
 Cargo.style.width = '100px';
 Cargo.style.height = '100px';
 Cargo.style.color = 'black';
@@ -110,6 +124,7 @@ document.body.appendChild(cargoContainer);
 // Create Image Element for Cargo
 const cargoImg = document.createElement('img');
 cargoImg.style.width = '100px'; // Adjust size as needed
+cargoImg.style.left = '75px';
 cargoImg.style.height = 'auto'; // Maintain aspect ratio
 cargoImg.style.display = 'none'; // Initially hidden
 cargoContainer.appendChild(cargoImg);
@@ -283,7 +298,6 @@ function createPort(position, color = 0x0000ff) {
   });
 }
 
-const textureLoader = new THREE.TextureLoader();
 const hurricaneTexture = textureLoader.load('./models/hurricane.png');
 const earthquakeTexture = textureLoader.load('./models/Earthquake.png');
 
@@ -367,9 +381,29 @@ function detectCollision(obj1, obj2){
 
 function reduceHealth(obj1, obj2){
   if (detectCollision(obj1, obj2)){
-    changeHappy(-5);
+    changeHappy(-3);
   }
 }
+
+function hurricaneReduceHealth(durationInSeconds) {
+  const interval = 500; // Interval in milliseconds
+  const duration = durationInSeconds * 1000; // Convert seconds to milliseconds
+  cargo = "spoilt";
+
+  const intervalId = setInterval(() => {
+    if (ship) {
+      hurricaneGroup.children.forEach((hurricane) => {
+        reduceHealth(hurricane, ship);
+      });
+    }
+  }, interval);
+
+  setTimeout(() => {
+    clearInterval(intervalId); // Stop the loop
+    console.log('Execution stopped');
+  }, duration);
+}
+
 
 function shakeEarth() {
   quakeGroup.children.forEach(object => {
@@ -391,8 +425,6 @@ function onMouseClick(event) {
     const clickedPoint = intersects[0].point;
     const lat = 90 - Math.acos(clickedPoint.y / earthRadius) * 180 / Math.PI;
     const lon = (Math.atan2(clickedPoint.x, -clickedPoint.z) * 180 / Math.PI + 180) % 360 - 180;
-    coordsDiv.textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
-    coordsDiv.style.display = 'block';
 
     createTemporaryHurricane(clickedPoint);
     createTemporaryEarthquake(clickedPoint);
@@ -404,14 +436,9 @@ function onMouseClick(event) {
     });
 
     // Check for collision between the hurricane and ships
-    if (ship) {
-      hurricaneGroup.children.forEach((hurricane) => {
-        reduceHealth(hurricane, ship);});
-    } 
+    hurricaneReduceHealth(3);
 
-  } else {
-    coordsDiv.style.display = 'none';
-  }
+  } 
 }
 
 window.addEventListener('click', onMouseClick, false);
@@ -554,11 +581,14 @@ function animate() {
     const direction = new THREE.Vector3().subVectors(nextPosition, currentPosition).normalize();
 
     const normal = currentPosition.clone().normalize();
-
     const right = new THREE.Vector3().crossVectors(direction, normal).normalize();
+
+    // adds offset to the height of the plane
+    ship.position.addScaledVector(normal, 1);
 
     const up = new THREE.Vector3().crossVectors(right, direction).normalize();
 
+    // Create a rotation matrix
     const rotationMatrix = new THREE.Matrix4().makeBasis(right, up, direction.negate());
 
     ship.quaternion.setFromRotationMatrix(rotationMatrix);
@@ -576,9 +606,11 @@ function animate() {
       console.log(`Cargo assigned: ${cargo}`);
 
       // cargoImg.src = `models/${cargo}.png`;
-      cargoImg.src = `models/happy.png`;
-      cargoImg.alt = `${cargo}`;
-      cargoImg.style.display = 'block';
+      if (cargo == "seafood"){
+        cargoImg.src = `models/seafood.png`;
+        cargoImg.alt = `${cargo}`;
+        cargoImg.style.display = 'block';
+      }
     }
     updateTrail();
     quakeGroup.children.forEach((earthquake) => {
@@ -587,7 +619,6 @@ function animate() {
   }
 
   trackShip();
-  cameraDiv.textContent = `Camera Position: X=${camera.position.x.toFixed(2)}, Y=${camera.position.y.toFixed(2)}, Z=${camera.position.z.toFixed(2)}`;
   controls.update();
   renderer.render(scene, camera);
 }
